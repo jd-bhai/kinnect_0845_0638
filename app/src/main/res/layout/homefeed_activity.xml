@@ -1,0 +1,406 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/mainRootLayout"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#F3F0EA"
+    android:fitsSystemWindows="true"
+    android:orientation="vertical">
+
+    <!-- TOP HEADER BAR -->
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="56dp"
+        android:paddingHorizontal="16dp"
+        android:paddingTop="8dp">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentStart="true"
+            android:layout_centerVertical="true"
+            android:text="kinnect"
+            android:textColor="#0B5F63"
+            android:textSize="28sp"
+            android:textStyle="bold" />
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentEnd="true"
+            android:layout_centerVertical="true"
+            android:orientation="horizontal">
+
+            <ImageButton
+                android:id="@+id/btnSearch"
+                android:layout_width="38dp"
+                android:layout_height="38dp"
+                android:layout_marginEnd="8dp"
+                android:background="@drawable/circle"
+                android:backgroundTint="#EAE5D9"
+                android:contentDescription="Search"
+                android:padding="8dp"
+                android:scaleType="fitCenter"
+                android:src="@drawable/search" />
+
+            <RelativeLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content">
+
+                <ImageButton
+                    android:id="@+id/btnMessenger"
+                    android:layout_width="38dp"
+                    android:layout_height="38dp"
+                    android:background="@drawable/circle"
+                    android:backgroundTint="#EAE5D9"
+                    android:contentDescription="Messenger"
+                    android:padding="8dp"
+                    android:scaleType="fitCenter"
+                    android:src="@drawable/messenger" />
+
+                <TextView
+                    android:layout_width="18dp"
+                    android:layout_height="18dp"
+                    android:layout_alignTop="@id/btnMessenger"
+                    android:layout_alignEnd="@id/btnMessenger"
+                    android:background="@drawable/circle"
+                    android:backgroundTint="#D93025"
+                    android:gravity="center"
+                    android:text="3"
+                    android:textColor="@color/white"
+                    android:textSize="10sp"
+                    android:textStyle="bold"
+                    android:translationX="4dp"
+                    android:translationY="-2dp" />
+
+            </RelativeLayout>
+
+        </LinearLayout>
+
+    </RelativeLayout>
+
+    <!-- TOP NAVIGATION TABS -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:layout_marginTop="4dp"
+        android:orientation="horizontal"
+        android:paddingHorizontal="8dp">
+
+        <RelativeLayout
+            android:id="@+id/tabHome"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1">
+
+            <ImageButton
+                android:layout_width="28dp"
+                android:layout_height="28dp"
+                android:layout_centerInParent="true"
+                android:background="@android:color/transparent"
+                android:contentDescription="Home"
+                android:scaleType="fitCenter"
+                android:src="@drawable/home"
+                app:tint="#0B5F63" />
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="3dp"
+                android:layout_alignParentBottom="true"
+                android:background="#0B5F63" />
+
+        </RelativeLayout>
+
+        <RelativeLayout
+            android:id="@+id/tabFriends"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1">
+
+            <ImageButton
+                android:layout_width="28dp"
+                android:layout_height="28dp"
+                android:layout_centerInParent="true"
+                android:background="@android:color/transparent"
+                android:contentDescription="Friends"
+                android:scaleType="fitCenter"
+                android:src="@drawable/friends" />
+
+        </RelativeLayout>
+
+        <RelativeLayout
+            android:id="@+id/tabMarketplace"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1">
+
+            <ImageButton
+                android:layout_width="26dp"
+                android:layout_height="26dp"
+                android:layout_centerInParent="true"
+                android:background="@android:color/transparent"
+                android:contentDescription="Marketplace"
+                android:scaleType="fitCenter"
+                android:src="@drawable/market" />
+
+        </RelativeLayout>
+
+        <RelativeLayout
+            android:id="@+id/tabNotifications"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1">
+
+            <ImageButton
+                android:id="@+id/ibNotif"
+                android:layout_width="28dp"
+                android:layout_height="28dp"
+                android:layout_centerInParent="true"
+                android:background="@android:color/transparent"
+                android:contentDescription="Notifications"
+                android:scaleType="fitCenter"
+                android:src="@drawable/notification" />
+
+            <TextView
+                android:layout_width="16dp"
+                android:layout_height="16dp"
+                android:layout_alignTop="@id/ibNotif"
+                android:layout_alignEnd="@id/ibNotif"
+                android:background="@drawable/circle"
+                android:backgroundTint="#D93025"
+                android:gravity="center"
+                android:text="5"
+                android:textColor="@color/white"
+                android:textSize="9sp"
+                android:textStyle="bold"
+                android:translationX="4dp"
+                android:translationY="-2dp" />
+
+        </RelativeLayout>
+
+        <RelativeLayout
+            android:id="@+id/tabMenu"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1">
+
+            <ImageButton
+                android:layout_width="28dp"
+                android:layout_height="28dp"
+                android:layout_centerInParent="true"
+                android:background="@android:color/transparent"
+                android:contentDescription="Menu"
+                android:scaleType="fitCenter"
+                android:src="@drawable/menu" />
+
+        </RelativeLayout>
+
+    </LinearLayout>
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="#D1CFC9" />
+
+    <!-- MAIN SCROLLING FEED -->
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:scrollbars="none">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <!-- CREATE POST INPUT ROW -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="#F3F0EA"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:paddingHorizontal="16dp"
+                android:paddingVertical="12dp">
+
+                <TextView
+                    android:id="@+id/tvUserInitialsHeader"
+                    android:layout_width="44dp"
+                    android:layout_height="44dp"
+                    android:background="@drawable/circle"
+                    android:backgroundTint="#0B5F63"
+                    android:gravity="center"
+                    android:text="U"
+                    android:textColor="@color/white"
+                    android:textSize="16sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/tvCreatePostPrompt"
+                    android:layout_width="0dp"
+                    android:layout_height="42dp"
+                    android:layout_marginStart="12dp"
+                    android:layout_marginEnd="12dp"
+                    android:layout_weight="1"
+                    android:background="@drawable/bg_rounded_card"
+                    android:gravity="center_vertical"
+                    android:paddingHorizontal="16dp"
+                    android:text="What's on your mind?"
+                    android:textColor="#65676B"
+                    android:textSize="14sp" />
+
+                <ImageButton
+                    android:id="@+id/btnPhotoPicker"
+                    android:layout_width="32dp"
+                    android:layout_height="32dp"
+                    android:background="@android:color/transparent"
+                    android:contentDescription="Pick Photo"
+                    android:scaleType="fitCenter"
+                    android:src="@drawable/photo"
+                    app:tint="#0B5F63" />
+
+            </LinearLayout>
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="6dp"
+                android:background="#E2DDD5" />
+
+            <!-- STORIES / CONTACTS ROW (DYNAMIC FIREBASE USERS) -->
+            <HorizontalScrollView
+                android:layout_width="match_parent"
+                android:layout_height="180dp"
+                android:background="#F3F0EA"
+                android:paddingVertical="12dp"
+                android:scrollbars="none">
+
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:orientation="horizontal"
+                    android:paddingHorizontal="12dp">
+
+                    <!-- CREATE STORY CARD -->
+                    <LinearLayout
+                        android:id="@+id/cardCreateStory"
+                        android:layout_width="100dp"
+                        android:layout_height="match_parent"
+                        android:layout_marginEnd="10dp"
+                        android:background="@drawable/bg_rounded_card"
+                        android:orientation="vertical">
+
+                        <RelativeLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="0dp"
+                            android:layout_weight="2.2"
+                            android:background="#E1ECED">
+
+                            <TextView
+                                android:id="@+id/tvStoryMyInitials"
+                                android:layout_width="54dp"
+                                android:layout_height="54dp"
+                                android:layout_centerInParent="true"
+                                android:background="@drawable/circle"
+                                android:backgroundTint="#0B5F63"
+                                android:gravity="center"
+                                android:text="U"
+                                android:textColor="@color/white"
+                                android:textSize="20sp"
+                                android:textStyle="bold" />
+
+                        </RelativeLayout>
+
+                        <RelativeLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="0dp"
+                            android:layout_weight="1"
+                            android:background="@color/white">
+
+                            <TextView
+                                android:id="@+id/btnPlusCreateStory"
+                                android:layout_width="26dp"
+                                android:layout_height="26dp"
+                                android:layout_centerHorizontal="true"
+                                android:layout_marginTop="-13dp"
+                                android:background="@drawable/circle"
+                                android:backgroundTint="#0B5F63"
+                                android:gravity="center"
+                                android:text="+"
+                                android:textColor="@color/white"
+                                android:textSize="18sp"
+                                android:textStyle="bold" />
+
+                            <TextView
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:layout_alignParentBottom="true"
+                                android:layout_marginBottom="8dp"
+                                android:gravity="center"
+                                android:text="Create story"
+                                android:textColor="#1C1E21"
+                                android:textSize="12sp"
+                                android:textStyle="bold" />
+
+                        </RelativeLayout>
+
+                    </LinearLayout>
+
+                    <!-- DYNAMIC CONTACTS -->
+                    <LinearLayout
+                        android:id="@+id/containerContacts"
+                        android:layout_width="wrap_content"
+                        android:layout_height="match_parent"
+                        android:orientation="horizontal" />
+
+                </LinearLayout>
+
+            </HorizontalScrollView>
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="6dp"
+                android:background="#E2DDD5" />
+
+            <!-- EMPTY FEED STATE / CONTAINER FOR REAL POSTS -->
+            <LinearLayout
+                android:id="@+id/containerPosts"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <LinearLayout
+                    android:id="@+id/layoutEmptyFeed"
+                    android:layout_width="match_parent"
+                    android:layout_height="200dp"
+                    android:gravity="center"
+                    android:orientation="vertical"
+                    android:padding="20dp"
+                    android:visibility="visible">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="No posts yet"
+                        android:textColor="#1C1E21"
+                        android:textSize="16sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="4dp"
+                        android:text="Be the first to post or connect with friends!"
+                        android:textColor="#65676B"
+                        android:textSize="13sp" />
+
+                </LinearLayout>
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+    </ScrollView>
+
+</LinearLayout>
