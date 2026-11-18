@@ -20,7 +20,8 @@ data class UserData(
     val phone: String = "",
     val profilePicUrl: String = "",
     val coverPhotoUrl: String = "",
-    val isOnline: Boolean = false
+    val isOnline: Boolean = false,
+    val fcmToken: String = ""
 )
 
 data class PostData(
@@ -28,7 +29,43 @@ data class PostData(
     val authorUid: String = "",
     val caption: String = "",
     val imageUri: String = "",
+    val timestamp: Long = System.currentTimeMillis(),
+    val reactionsCount: Int = 0,
+    val userReaction: String = ""
+)
+
+data class CommentData(
+    val commentId: String = "",
+    val postId: String = "",
+    val parentCommentId: String = "",
+    val authorUid: String = "",
+    val authorName: String = "",
+    val text: String = "",
     val timestamp: Long = System.currentTimeMillis()
+)
+
+data class ChatMessageData(
+    val messageId: String = "",
+    val chatRoomId: String = "",
+    val senderUid: String = "",
+    val receiverUid: String = "",
+    val text: String = "",
+    val timestamp: Long = System.currentTimeMillis(),
+    val status: String = "sent",
+    val reaction: String = "",
+    val isEdited: Boolean = false
+)
+
+data class NotificationData(
+    val notifId: String = "",
+    val receiverUid: String = "",
+    val senderUid: String = "",
+    val senderName: String = "",
+    val targetUid: String = "",
+    val type: String = "",
+    val message: String = "",
+    val timestamp: Long = System.currentTimeMillis(),
+    val isRead: Boolean = false
 )
 
 data class MarketItemData(
@@ -53,8 +90,8 @@ data class StoryData(
 class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, null, DATABASE_VERSION) {
 
     companion object {
-        private const val DATABASE_NAME = "kinnect_sqlite.db"
-        private const val DATABASE_VERSION = 1
+        private const val DATABASE_NAME = "kinnect_full.db"
+        private const val DATABASE_VERSION = 2
 
         @Volatile
         private var INSTANCE: DatabaseHelper? = null
@@ -82,7 +119,8 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
                 phone TEXT,
                 profilePicUrl TEXT,
                 coverPhotoUrl TEXT,
-                isOnline INTEGER DEFAULT 0
+                isOnline INTEGER DEFAULT 0,
+                fcmToken TEXT
             )
         """.trimIndent()
 
@@ -109,6 +147,55 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
                 caption TEXT,
                 imageUri TEXT,
                 timestamp INTEGER
+            )
+        """.trimIndent()
+
+        val createPostReactionsTable = """
+            CREATE TABLE postReactions (
+                postId TEXT,
+                userUid TEXT,
+                type TEXT,
+                PRIMARY KEY (postId, userUid)
+            )
+        """.trimIndent()
+
+        val createPostCommentsTable = """
+            CREATE TABLE postComments (
+                commentId TEXT PRIMARY KEY,
+                postId TEXT,
+                parentCommentId TEXT,
+                authorUid TEXT,
+                authorName TEXT,
+                text TEXT,
+                timestamp INTEGER
+            )
+        """.trimIndent()
+
+        val createChatsTable = """
+            CREATE TABLE chats (
+                messageId TEXT PRIMARY KEY,
+                chatRoomId TEXT,
+                senderUid TEXT,
+                receiverUid TEXT,
+                text TEXT,
+                timestamp INTEGER,
+                status TEXT,
+                reaction TEXT,
+                isEdited INTEGER DEFAULT 0
+            )
+        """.trimIndent()
+
+        val createNotificationsTable = """
+            CREATE TABLE notifications (
+                notifId TEXT PRIMARY KEY,
+                receiverUid TEXT,
+                senderUid TEXT,
+                senderName TEXT,
+                targetUid TEXT,
+                type TEXT,
+                message TEXT,
+                timestamp INTEGER,
+                isRead INTEGER DEFAULT 0
             )
         """.trimIndent()
 
@@ -139,6 +226,10 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
         db.execSQL(createFriendsTable)
         db.execSQL(createFriendRequestsTable)
         db.execSQL(createPostsTable)
+        db.execSQL(createPostReactionsTable)
+        db.execSQL(createPostCommentsTable)
+        db.execSQL(createChatsTable)
+        db.execSQL(createNotificationsTable)
         db.execSQL(createMarketplaceTable)
         db.execSQL(createStoriesTable)
     }
@@ -148,6 +239,10 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
         db.execSQL("DROP TABLE IF EXISTS friends")
         db.execSQL("DROP TABLE IF EXISTS friendRequests")
         db.execSQL("DROP TABLE IF EXISTS posts")
+        db.execSQL("DROP TABLE IF EXISTS postReactions")
+        db.execSQL("DROP TABLE IF EXISTS postComments")
+        db.execSQL("DROP TABLE IF EXISTS chats")
+        db.execSQL("DROP TABLE IF EXISTS notifications")
         db.execSQL("DROP TABLE IF EXISTS marketplace")
         db.execSQL("DROP TABLE IF EXISTS stories")
         onCreate(db)
@@ -172,6 +267,7 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
             put("profilePicUrl", user.profilePicUrl)
             put("coverPhotoUrl", user.coverPhotoUrl)
             put("isOnline", if (user.isOnline) 1 else 0)
+            put("fcmToken", user.fcmToken)
         }
         val result = db.insertWithOnConflict("users", null, values, SQLiteDatabase.CONFLICT_REPLACE)
         return result != -1L
@@ -237,6 +333,19 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
         return users
     }
 
+    fun searchUsers(query: String, currentUid: String): List<UserData> {
+        val db = readableDatabase
+        val sql = "SELECT * FROM users WHERE uid != ? AND (firstName LIKE ? OR lastName LIKE ? OR username LIKE ?)"
+        val pattern = "%$query%"
+        val cursor = db.rawQuery(sql, arrayOf(currentUid, pattern, pattern, pattern))
+        val users = mutableListOf<UserData>()
+        while (cursor.moveToNext()) {
+            users.add(cursorToUser(cursor))
+        }
+        cursor.close()
+        return users
+    }
+
     private fun cursorToUser(cursor: android.database.Cursor): UserData {
         return UserData(
             uid = cursor.getString(cursor.getColumnIndexOrThrow("uid")),
@@ -252,7 +361,8 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
             phone = cursor.getString(cursor.getColumnIndexOrThrow("phone")) ?: "",
             profilePicUrl = cursor.getString(cursor.getColumnIndexOrThrow("profilePicUrl")) ?: "",
             coverPhotoUrl = cursor.getString(cursor.getColumnIndexOrThrow("coverPhotoUrl")) ?: "",
-            isOnline = cursor.getInt(cursor.getColumnIndexOrThrow("isOnline")) == 1
+            isOnline = cursor.getInt(cursor.getColumnIndexOrThrow("isOnline")) == 1,
+            fcmToken = cursor.getString(cursor.getColumnIndexOrThrow("fcmToken")) ?: ""
         )
     }
 
@@ -265,7 +375,40 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
             put("senderUid", senderUid)
         }
         val result = db.insertWithOnConflict("friendRequests", null, values, SQLiteDatabase.CONFLICT_REPLACE)
-        return result != -1L
+        if (result != -1L) {
+            val sender = getUserByUid(senderUid)
+            val senderName = if (sender != null) "${sender.firstName} ${sender.lastName}".trim() else "Someone"
+            addNotification(
+                receiverUid = receiverUid,
+                senderUid = senderUid,
+                senderName = senderName,
+                targetUid = receiverUid,
+                type = "friend_request",
+                message = "sent you a friend request."
+            )
+            return true
+        }
+        return false
+    }
+
+    fun isFriend(userUid: String, friendUid: String): Boolean {
+        val db = readableDatabase
+        val cursor = db.query(
+            "friends", null, "userUid = ? AND friendUid = ?", arrayOf(userUid, friendUid), null, null, null
+        )
+        val exists = cursor.moveToFirst()
+        cursor.close()
+        return exists
+    }
+
+    fun hasSentFriendRequest(senderUid: String, receiverUid: String): Boolean {
+        val db = readableDatabase
+        val cursor = db.query(
+            "friendRequests", null, "senderUid = ? AND receiverUid = ?", arrayOf(senderUid, receiverUid), null, null, null
+        )
+        val exists = cursor.moveToFirst()
+        cursor.close()
+        return exists
     }
 
     fun acceptFriendRequest(currentUid: String, senderUid: String): Boolean {
@@ -295,6 +438,13 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
     fun deleteFriendRequest(currentUid: String, senderUid: String): Boolean {
         val db = writableDatabase
         return db.delete("friendRequests", "receiverUid = ? AND senderUid = ?", arrayOf(currentUid, senderUid)) > 0
+    }
+
+    fun unfriendUser(currentUid: String, targetUid: String): Boolean {
+        val db = writableDatabase
+        db.delete("friends", "userUid = ? AND friendUid = ?", arrayOf(currentUid, targetUid))
+        db.delete("friends", "userUid = ? AND friendUid = ?", arrayOf(targetUid, currentUid))
+        return true
     }
 
     fun getFriendRequestsForUser(currentUid: String): List<UserData> {
@@ -329,7 +479,7 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
         return friends
     }
 
-    // --- POSTS ---
+    // --- POSTS, REACTIONS & COMMENTS ---
 
     fun createPost(authorUid: String, caption: String, imageUri: String): String {
         val db = writableDatabase
@@ -345,23 +495,282 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
         return postId
     }
 
-    fun getAllPosts(): List<PostData> {
+    fun getAllPosts(currentUid: String = ""): List<PostData> {
         val db = readableDatabase
         val cursor = db.query("posts", null, null, null, null, null, "timestamp DESC")
         val posts = mutableListOf<PostData>()
         while (cursor.moveToNext()) {
+            val postId = cursor.getString(cursor.getColumnIndexOrThrow("postId"))
+            val authorUid = cursor.getString(cursor.getColumnIndexOrThrow("authorUid"))
+            val caption = cursor.getString(cursor.getColumnIndexOrThrow("caption")) ?: ""
+            val imageUri = cursor.getString(cursor.getColumnIndexOrThrow("imageUri")) ?: ""
+            val timestamp = cursor.getLong(cursor.getColumnIndexOrThrow("timestamp"))
+            val reactionsCount = getPostReactionsCount(postId)
+            val userReaction = if (currentUid.isNotEmpty()) getUserPostReaction(postId, currentUid) else ""
+
             posts.add(
                 PostData(
-                    postId = cursor.getString(cursor.getColumnIndexOrThrow("postId")),
-                    authorUid = cursor.getString(cursor.getColumnIndexOrThrow("authorUid")),
-                    caption = cursor.getString(cursor.getColumnIndexOrThrow("caption")) ?: "",
-                    imageUri = cursor.getString(cursor.getColumnIndexOrThrow("imageUri")) ?: "",
-                    timestamp = cursor.getLong(cursor.getColumnIndexOrThrow("timestamp"))
+                    postId = postId,
+                    authorUid = authorUid,
+                    caption = caption,
+                    imageUri = imageUri,
+                    timestamp = timestamp,
+                    reactionsCount = reactionsCount,
+                    userReaction = userReaction
                 )
             )
         }
         cursor.close()
         return posts
+    }
+
+    fun getPostsByAuthor(authorUid: String): List<PostData> {
+        val db = readableDatabase
+        val cursor = db.query("posts", null, "authorUid = ?", arrayOf(authorUid), null, null, "timestamp DESC")
+        val posts = mutableListOf<PostData>()
+        while (cursor.moveToNext()) {
+            val postId = cursor.getString(cursor.getColumnIndexOrThrow("postId"))
+            val caption = cursor.getString(cursor.getColumnIndexOrThrow("caption")) ?: ""
+            val imageUri = cursor.getString(cursor.getColumnIndexOrThrow("imageUri")) ?: ""
+            val timestamp = cursor.getLong(cursor.getColumnIndexOrThrow("timestamp"))
+
+            posts.add(
+                PostData(
+                    postId = postId,
+                    authorUid = authorUid,
+                    caption = caption,
+                    imageUri = imageUri,
+                    timestamp = timestamp
+                )
+            )
+        }
+        cursor.close()
+        return posts
+    }
+
+    fun setPostReaction(postId: String, userUid: String, type: String) {
+        val db = writableDatabase
+        val values = ContentValues().apply {
+            put("postId", postId)
+            put("userUid", userUid)
+            put("type", type)
+        }
+        db.insertWithOnConflict("postReactions", null, values, SQLiteDatabase.CONFLICT_REPLACE)
+    }
+
+    fun removePostReaction(postId: String, userUid: String) {
+        val db = writableDatabase
+        db.delete("postReactions", "postId = ? AND userUid = ?", arrayOf(postId, userUid))
+    }
+
+    fun getUserPostReaction(postId: String, userUid: String): String {
+        val db = readableDatabase
+        val cursor = db.query("postReactions", arrayOf("type"), "postId = ? AND userUid = ?", arrayOf(postId, userUid), null, null, null)
+        var type = ""
+        if (cursor.moveToFirst()) {
+            type = cursor.getString(cursor.getColumnIndexOrThrow("type")) ?: ""
+        }
+        cursor.close()
+        return type
+    }
+
+    fun getPostReactionsCount(postId: String): Int {
+        val db = readableDatabase
+        val cursor = db.rawQuery("SELECT COUNT(*) FROM postReactions WHERE postId = ?", arrayOf(postId))
+        var count = 0
+        if (cursor.moveToFirst()) {
+            count = cursor.getInt(0)
+        }
+        cursor.close()
+        return count
+    }
+
+    fun addPostComment(postId: String, parentCommentId: String, authorUid: String, authorName: String, text: String): String {
+        val db = writableDatabase
+        val commentId = UUID.randomUUID().toString()
+        val values = ContentValues().apply {
+            put("commentId", commentId)
+            put("postId", postId)
+            put("parentCommentId", parentCommentId)
+            put("authorUid", authorUid)
+            put("authorName", authorName)
+            put("text", text)
+            put("timestamp", System.currentTimeMillis())
+        }
+        db.insert("postComments", null, values)
+        return commentId
+    }
+
+    fun getPostComments(postId: String): List<CommentData> {
+        val db = readableDatabase
+        val cursor = db.query("postComments", null, "postId = ? AND (parentCommentId IS NULL OR parentCommentId = '')", arrayOf(postId), null, null, "timestamp ASC")
+        val comments = mutableListOf<CommentData>()
+        while (cursor.moveToNext()) {
+            comments.add(cursorToComment(cursor))
+        }
+        cursor.close()
+        return comments
+    }
+
+    fun getCommentReplies(postId: String, parentCommentId: String): List<CommentData> {
+        val db = readableDatabase
+        val cursor = db.query("postComments", null, "postId = ? AND parentCommentId = ?", arrayOf(postId, parentCommentId), null, null, "timestamp ASC")
+        val replies = mutableListOf<CommentData>()
+        while (cursor.moveToNext()) {
+            replies.add(cursorToComment(cursor))
+        }
+        cursor.close()
+        return replies
+    }
+
+    private fun cursorToComment(cursor: android.database.Cursor): CommentData {
+        return CommentData(
+            commentId = cursor.getString(cursor.getColumnIndexOrThrow("commentId")),
+            postId = cursor.getString(cursor.getColumnIndexOrThrow("postId")),
+            parentCommentId = cursor.getString(cursor.getColumnIndexOrThrow("parentCommentId")) ?: "",
+            authorUid = cursor.getString(cursor.getColumnIndexOrThrow("authorUid")),
+            authorName = cursor.getString(cursor.getColumnIndexOrThrow("authorName")) ?: "",
+            text = cursor.getString(cursor.getColumnIndexOrThrow("text")) ?: "",
+            timestamp = cursor.getLong(cursor.getColumnIndexOrThrow("timestamp"))
+        )
+    }
+
+    // --- CHATS / MESSAGING ---
+
+    fun sendMessage(senderUid: String, receiverUid: String, text: String): String {
+        val db = writableDatabase
+        val messageId = UUID.randomUUID().toString()
+        val chatRoomId = if (senderUid < receiverUid) "${senderUid}_${receiverUid}" else "${receiverUid}_${senderUid}"
+
+        val values = ContentValues().apply {
+            put("messageId", messageId)
+            put("chatRoomId", chatRoomId)
+            put("senderUid", senderUid)
+            put("receiverUid", receiverUid)
+            put("text", text)
+            put("timestamp", System.currentTimeMillis())
+            put("status", "sent")
+            put("reaction", "")
+            put("isEdited", 0)
+        }
+        db.insert("chats", null, values)
+
+        // Add Notification for receiver
+        val sender = getUserByUid(senderUid)
+        val senderName = if (sender != null) "${sender.firstName} ${sender.lastName}".trim() else "Someone"
+        addNotification(
+            receiverUid = receiverUid,
+            senderUid = senderUid,
+            senderName = senderName,
+            targetUid = receiverUid,
+            type = "chat",
+            message = "sent you a message: \"$text\""
+        )
+
+        return messageId
+    }
+
+    fun editMessage(messageId: String, newText: String) {
+        val db = writableDatabase
+        val values = ContentValues().apply {
+            put("text", newText)
+            put("isEdited", 1)
+        }
+        db.update("chats", values, "messageId = ?", arrayOf(messageId))
+    }
+
+    fun deleteMessage(messageId: String) {
+        val db = writableDatabase
+        db.delete("chats", "messageId = ?", arrayOf(messageId))
+    }
+
+    fun setMessageReaction(messageId: String, reaction: String) {
+        val db = writableDatabase
+        val values = ContentValues().apply {
+            put("reaction", reaction)
+        }
+        db.update("chats", values, "messageId = ?", arrayOf(messageId))
+    }
+
+    fun markIncomingMessagesAsRead(chatRoomId: String, currentUid: String) {
+        val db = writableDatabase
+        val values = ContentValues().apply {
+            put("status", "read")
+        }
+        db.update("chats", values, "chatRoomId = ? AND receiverUid = ? AND status != 'read'", arrayOf(chatRoomId, currentUid))
+    }
+
+    fun getChatMessages(chatRoomId: String): List<ChatMessageData> {
+        val db = readableDatabase
+        val cursor = db.query("chats", null, "chatRoomId = ?", arrayOf(chatRoomId), null, null, "timestamp ASC")
+        val messages = mutableListOf<ChatMessageData>()
+        while (cursor.moveToNext()) {
+            messages.add(
+                ChatMessageData(
+                    messageId = cursor.getString(cursor.getColumnIndexOrThrow("messageId")),
+                    chatRoomId = cursor.getString(cursor.getColumnIndexOrThrow("chatRoomId")),
+                    senderUid = cursor.getString(cursor.getColumnIndexOrThrow("senderUid")),
+                    receiverUid = cursor.getString(cursor.getColumnIndexOrThrow("receiverUid")),
+                    text = cursor.getString(cursor.getColumnIndexOrThrow("text")) ?: "",
+                    timestamp = cursor.getLong(cursor.getColumnIndexOrThrow("timestamp")),
+                    status = cursor.getString(cursor.getColumnIndexOrThrow("status")) ?: "sent",
+                    reaction = cursor.getString(cursor.getColumnIndexOrThrow("reaction")) ?: "",
+                    isEdited = cursor.getInt(cursor.getColumnIndexOrThrow("isEdited")) == 1
+                )
+            )
+        }
+        cursor.close()
+        return messages
+    }
+
+    // --- NOTIFICATIONS ---
+
+    fun addNotification(
+        receiverUid: String,
+        senderUid: String,
+        senderName: String,
+        targetUid: String,
+        type: String,
+        message: String
+    ): String {
+        val db = writableDatabase
+        val notifId = UUID.randomUUID().toString()
+        val values = ContentValues().apply {
+            put("notifId", notifId)
+            put("receiverUid", receiverUid)
+            put("senderUid", senderUid)
+            put("senderName", senderName)
+            put("targetUid", targetUid)
+            put("type", type)
+            put("message", message)
+            put("timestamp", System.currentTimeMillis())
+            put("isRead", 0)
+        }
+        db.insert("notifications", null, values)
+        return notifId
+    }
+
+    fun getNotificationsForUser(currentUid: String): List<NotificationData> {
+        val db = readableDatabase
+        val cursor = db.query("notifications", null, "receiverUid = ?", arrayOf(currentUid), null, null, "timestamp DESC")
+        val notifs = mutableListOf<NotificationData>()
+        while (cursor.moveToNext()) {
+            notifs.add(
+                NotificationData(
+                    notifId = cursor.getString(cursor.getColumnIndexOrThrow("notifId")),
+                    receiverUid = cursor.getString(cursor.getColumnIndexOrThrow("receiverUid")),
+                    senderUid = cursor.getString(cursor.getColumnIndexOrThrow("senderUid")),
+                    senderName = cursor.getString(cursor.getColumnIndexOrThrow("senderName")) ?: "",
+                    targetUid = cursor.getString(cursor.getColumnIndexOrThrow("targetUid")) ?: "",
+                    type = cursor.getString(cursor.getColumnIndexOrThrow("type")) ?: "",
+                    message = cursor.getString(cursor.getColumnIndexOrThrow("message")) ?: "",
+                    timestamp = cursor.getLong(cursor.getColumnIndexOrThrow("timestamp")),
+                    isRead = cursor.getInt(cursor.getColumnIndexOrThrow("isRead")) == 1
+                )
+            )
+        }
+        cursor.close()
+        return notifs
     }
 
     // --- MARKETPLACE ---

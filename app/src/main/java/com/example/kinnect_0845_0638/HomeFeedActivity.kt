@@ -11,6 +11,7 @@ import android.view.Gravity
 import android.view.View
 import android.widget.ImageView
 import android.widget.LinearLayout
+import android.widget.PopupWindow
 import android.widget.RelativeLayout
 import android.widget.TextView
 import android.widget.Toast
@@ -33,8 +34,8 @@ class HomeFeedActivity : AppCompatActivity() {
         dbHelper = DatabaseHelper.getInstance(this)
 
         val mainLayout = findViewById<View>(R.id.mainRootLayout)
-        mainLayout?.let {
-            ViewCompat.setOnApplyWindowInsetsListener(it) { view, insets ->
+        if (mainLayout != null) {
+            ViewCompat.setOnApplyWindowInsetsListener(mainLayout) { view, insets ->
                 val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
                 view.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
                 insets
@@ -55,6 +56,7 @@ class HomeFeedActivity : AppCompatActivity() {
         }
 
         setUserOnlineStatus(true)
+
         loadCurrentUserData(tvUserInitialsHeader, tvStoryMyInitials, tvCreatePostPrompt)
         loadFriendsOnlyStories()
         loadPostsFromSQLite()
@@ -82,8 +84,8 @@ class HomeFeedActivity : AppCompatActivity() {
         tvHeader?.text = initials
         tvStory?.text = initials
 
-        if (firstName.isNotEmpty()) {
-            tvPrompt?.text = "What's on your mind, $firstName?"
+        if (firstName.isNotEmpty() && tvPrompt != null) {
+            tvPrompt.text = "What's on your mind, $firstName?"
         }
     }
 
@@ -100,9 +102,11 @@ class HomeFeedActivity : AppCompatActivity() {
     }
 
     private fun loadPostsFromSQLite() {
+        val currentUid = SessionManager.getCurrentUserUid(this) ?: ""
         containerPosts.removeAllViews()
-        val posts = dbHelper.getAllPosts()
-        val hasPosts = posts.isNotEmpty()
+
+        val posts = dbHelper.getAllPosts(currentUid)
+        layoutEmptyFeed.visibility = if (posts.isEmpty()) View.VISIBLE else View.GONE
 
         for (post in posts) {
             val author = dbHelper.getUserByUid(post.authorUid)
@@ -111,21 +115,38 @@ class HomeFeedActivity : AppCompatActivity() {
             val fullName = "$firstName $lastName".trim()
             val initials = UserHelper.getUserInitials(firstName, lastName)
 
-            renderPostCard(post.authorUid, fullName, initials, post.caption, post.imageUri, post.timestamp)
+            renderPostCard(
+                postId = post.postId,
+                authorUid = post.authorUid,
+                authorName = fullName,
+                initials = initials,
+                captionText = post.caption,
+                imageUriStr = post.imageUri,
+                timestamp = post.timestamp,
+                reactionsCount = post.reactionsCount,
+                userReaction = post.userReaction
+            )
         }
-
-        layoutEmptyFeed.visibility = if (hasPosts) View.GONE else View.VISIBLE
     }
 
     private fun renderPostCard(
+        postId: String,
         authorUid: String,
         authorName: String,
         initials: String,
         captionText: String,
         imageUriStr: String,
-        timestamp: Long
+        timestamp: Long,
+        reactionsCount: Int,
+        userReaction: String
     ) {
+        val existingCard = containerPosts.findViewWithTag<View>(postId)
+        if (existingCard != null) {
+            containerPosts.removeView(existingCard)
+        }
+
         val postCard = LinearLayout(this).apply {
+            tag = postId
             layoutParams = LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT
@@ -135,6 +156,7 @@ class HomeFeedActivity : AppCompatActivity() {
             setPadding(14.dpToPx(), 14.dpToPx(), 14.dpToPx(), 14.dpToPx())
         }
 
+        // Header Row
         val headerLayout = LinearLayout(this).apply {
             layoutParams = LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
@@ -197,6 +219,7 @@ class HomeFeedActivity : AppCompatActivity() {
         headerLayout.addView(nameTimeLayout)
         postCard.addView(headerLayout)
 
+        // Caption
         if (captionText.isNotEmpty()) {
             val tvCaption = TextView(this).apply {
                 layoutParams = LinearLayout.LayoutParams(
@@ -210,6 +233,7 @@ class HomeFeedActivity : AppCompatActivity() {
             postCard.addView(tvCaption)
         }
 
+        // Image
         if (imageUriStr.isNotEmpty()) {
             val ivPostImage = ImageView(this).apply {
                 layoutParams = LinearLayout.LayoutParams(
@@ -253,6 +277,48 @@ class HomeFeedActivity : AppCompatActivity() {
             }.start()
         }
 
+        // Reactions Count Row
+        val reactionCountRow = LinearLayout(this).apply {
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            ).apply { setMargins(0, 4.dpToPx(), 0, 4.dpToPx()) }
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+        }
+
+        val ivReactionIcon = ImageView(this).apply {
+            layoutParams = LinearLayout.LayoutParams(16.dpToPx(), 16.dpToPx()).apply {
+                marginEnd = 6.dpToPx()
+            }
+            val iconRes = when (userReaction) {
+                "heart" -> R.drawable.heart
+                "like" -> R.drawable.like
+                "face" -> R.drawable.face
+                "emoji" -> R.drawable.emoji
+                "star" -> R.drawable.star
+                "highlight" -> R.drawable.highlight
+                else -> R.drawable.heart
+            }
+            setImageResource(iconRes)
+            setColorFilter(Color.parseColor("#D93025"))
+        }
+
+        val tvReactionCount = TextView(this).apply {
+            text = when (reactionsCount) {
+                0 -> "No reactions yet"
+                1 -> "1 reaction"
+                else -> "$reactionsCount reactions"
+            }
+            textSize = 12f
+            setTextColor(Color.parseColor("#65676B"))
+        }
+
+        reactionCountRow.addView(ivReactionIcon)
+        reactionCountRow.addView(tvReactionCount)
+        postCard.addView(reactionCountRow)
+
+        // Divider
         val divider = View(this).apply {
             layoutParams = LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
@@ -262,6 +328,7 @@ class HomeFeedActivity : AppCompatActivity() {
         }
         postCard.addView(divider)
 
+        // Action Buttons (Like with Popup, Comment, Share)
         val actionsLayout = LinearLayout(this).apply {
             layoutParams = LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
@@ -271,11 +338,21 @@ class HomeFeedActivity : AppCompatActivity() {
             gravity = Gravity.CENTER_VERTICAL
         }
 
-        actionsLayout.addView(createActionButton("Like", R.drawable.home))
-        actionsLayout.addView(createActionButton("Comment", R.drawable.messenger))
+        val commentBtn = createActionButton("Comment", R.drawable.messenger).apply {
+            setOnClickListener {
+                val intent = Intent(this@HomeFeedActivity, CommentsActivity::class.java).apply {
+                    putExtra("POST_ID", postId)
+                }
+                startActivity(intent)
+            }
+        }
+
+        actionsLayout.addView(createLikeActionButton(postId, userReaction))
+        actionsLayout.addView(commentBtn)
         actionsLayout.addView(createActionButton("Share", R.drawable.share))
 
         postCard.addView(actionsLayout)
+
         containerPosts.addView(postCard)
     }
 
@@ -311,6 +388,118 @@ class HomeFeedActivity : AppCompatActivity() {
         }
 
         return actionItem
+    }
+
+    private fun createLikeActionButton(postId: String, userReaction: String): LinearLayout {
+        val actionItem = LinearLayout(this).apply {
+            layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.MATCH_PARENT, 1f)
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER
+            isClickable = true
+            isFocusable = true
+        }
+
+        val iconResAndColor = when (userReaction) {
+            "heart" -> Pair(R.drawable.heart, "#D93025")
+            "like" -> Pair(R.drawable.like, "#0B5F63")
+            "face" -> Pair(R.drawable.face, "#F2994A")
+            "emoji" -> Pair(R.drawable.emoji, "#F2C94C")
+            "star" -> Pair(R.drawable.star, "#27AE60")
+            "highlight" -> Pair(R.drawable.highlight, "#9B51E0")
+            else -> Pair(R.drawable.like, "#65676B")
+        }
+
+        val icon = ImageView(this).apply {
+            layoutParams = LinearLayout.LayoutParams(18.dpToPx(), 18.dpToPx()).apply {
+                marginEnd = 6.dpToPx()
+            }
+            setImageResource(iconResAndColor.first)
+            setColorFilter(Color.parseColor(iconResAndColor.second))
+        }
+
+        val tvLabel = TextView(this).apply {
+            text = if (userReaction.isNotEmpty()) "Liked" else "Like"
+            textSize = 13f
+            setTypeface(null, Typeface.BOLD)
+            setTextColor(Color.parseColor(if (userReaction.isNotEmpty()) iconResAndColor.second else "#65676B"))
+        }
+
+        actionItem.addView(icon)
+        actionItem.addView(tvLabel)
+
+        actionItem.setOnClickListener {
+            val currentUid = SessionManager.getCurrentUserUid(this) ?: return@setOnClickListener
+            if (userReaction.isNotEmpty()) {
+                dbHelper.removePostReaction(postId, currentUid)
+            } else {
+                dbHelper.setPostReaction(postId, currentUid, "heart")
+            }
+            loadPostsFromSQLite()
+        }
+
+        actionItem.setOnLongClickListener {
+            showReactionPopup(actionItem, postId, userReaction)
+            true
+        }
+
+        return actionItem
+    }
+
+    private fun showReactionPopup(anchorView: View, postId: String, currentReaction: String) {
+        val currentUid = SessionManager.getCurrentUserUid(this) ?: return
+
+        val popupView = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            setBackgroundResource(R.drawable.bg_rounded_card)
+            backgroundTintList = android.content.res.ColorStateList.valueOf(Color.WHITE)
+            setPadding(12.dpToPx(), 8.dpToPx(), 12.dpToPx(), 8.dpToPx())
+            elevation = 16f
+        }
+
+        val reactions = listOf(
+            Triple("heart", R.drawable.heart, "#D93025"),
+            Triple("like", R.drawable.like, "#0B5F63"),
+            Triple("face", R.drawable.face, "#F2994A"),
+            Triple("emoji", R.drawable.emoji, "#F2C94C"),
+            Triple("star", R.drawable.star, "#27AE60"),
+            Triple("highlight", R.drawable.highlight, "#9B51E0")
+        )
+
+        val popupWindow = PopupWindow(
+            popupView,
+            LinearLayout.LayoutParams.WRAP_CONTENT,
+            LinearLayout.LayoutParams.WRAP_CONTENT,
+            true
+        ).apply {
+            elevation = 16f
+            isOutsideTouchable = true
+        }
+
+        for ((type, iconRes, colorHex) in reactions) {
+            val emojiBtn = ImageView(this).apply {
+                layoutParams = LinearLayout.LayoutParams(36.dpToPx(), 36.dpToPx()).apply {
+                    marginEnd = 8.dpToPx()
+                }
+                setImageResource(iconRes)
+                setColorFilter(Color.parseColor(colorHex))
+                setPadding(4.dpToPx(), 4.dpToPx(), 4.dpToPx(), 4.dpToPx())
+                isClickable = true
+                isFocusable = true
+
+                setOnClickListener {
+                    if (currentReaction == type) {
+                        dbHelper.removePostReaction(postId, currentUid)
+                    } else {
+                        dbHelper.setPostReaction(postId, currentUid, type)
+                    }
+                    loadPostsFromSQLite()
+                    popupWindow.dismiss()
+                }
+            }
+            popupView.addView(emojiBtn)
+        }
+
+        popupWindow.showAsDropDown(anchorView, 0, -80.dpToPx())
     }
 
     private fun getTimeAgo(timeMs: Long): String {
@@ -421,13 +610,11 @@ class HomeFeedActivity : AppCompatActivity() {
         findViewById<View>(R.id.tvCreatePostPrompt)?.setOnClickListener(openCreatePost)
         findViewById<View>(R.id.btnPhotoPicker)?.setOnClickListener(openCreatePost)
 
-        // 1. Tapping '+' button launches CameraActivity directly
         findViewById<View>(R.id.btnPlusCreateStory)?.setOnClickListener {
             val intent = Intent(this, CameraActivity::class.java)
             startActivity(intent)
         }
 
-        // 2. Tapping user initials inside story card opens YourStoryActivity
         findViewById<TextView>(R.id.tvStoryMyInitials)?.setOnClickListener {
             val currentUid = SessionManager.getCurrentUserUid(this) ?: return@setOnClickListener
             val story = dbHelper.getLatestUserStory(currentUid)
@@ -441,12 +628,16 @@ class HomeFeedActivity : AppCompatActivity() {
             }
         }
 
-        val stubListener = View.OnClickListener {
-            Toast.makeText(this, "Navigating...", Toast.LENGTH_SHORT).show()
+        findViewById<View>(R.id.tabNotifications)?.setOnClickListener {
+            val intent = Intent(this, NotificationsActivity::class.java)
+            startActivity(intent)
         }
 
-        findViewById<View>(R.id.tabNotifications)?.setOnClickListener(stubListener)
-        findViewById<View>(R.id.btnSearch)?.setOnClickListener(stubListener)
+        findViewById<View>(R.id.btnSearch)?.setOnClickListener {
+            val intent = Intent(this, SearchActivity::class.java)
+            startActivity(intent)
+        }
+
         findViewById<View>(R.id.btnMessenger)?.setOnClickListener {
             val intent = Intent(this, ChatsActivity::class.java)
             startActivity(intent)
@@ -456,14 +647,6 @@ class HomeFeedActivity : AppCompatActivity() {
     private fun setUserOnlineStatus(isOnline: Boolean) {
         val uid = SessionManager.getCurrentUserUid(this) ?: return
         dbHelper.setOnlineStatus(uid, isOnline)
-    }
-
-    private fun performLogout() {
-        SessionManager.logout(this)
-        val intent = Intent(this, LoginActivity::class.java)
-        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-        startActivity(intent)
-        finish()
     }
 
     private fun Int.dpToPx(): Int {

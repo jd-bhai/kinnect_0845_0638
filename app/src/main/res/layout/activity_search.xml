@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/mainRootLayout"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#F3F0EA"
+    android:orientation="vertical"
+    android:padding="12dp">
+
+    <!-- Top Search Bar -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
+
+        <ImageButton
+            android:id="@+id/btnBack"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:background="@android:color/transparent"
+            android:contentDescription="Back"
+            android:padding="6dp"
+            android:scaleType="fitCenter"
+            android:src="@drawable/left_arrow" />
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="44dp"
+            android:layout_marginStart="8dp"
+            android:layout_weight="1"
+            android:background="@drawable/oval"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingHorizontal="10dp">
+
+            <ImageView
+                android:layout_width="22dp"
+                android:layout_height="22dp"
+                android:contentDescription="Search Icon"
+                android:scaleType="fitCenter"
+                android:src="@drawable/search" />
+
+            <EditText
+                android:id="@+id/etSearchQuery"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_marginStart="8dp"
+                android:layout_weight="1"
+                android:background="@android:color/transparent"
+                android:hint="Search users, posts..."
+                android:textColor="@color/black"
+                android:textSize="15sp" />
+
+            <ImageButton
+                android:id="@+id/btnClearSearch"
+                android:layout_width="26dp"
+                android:layout_height="26dp"
+                android:background="@drawable/circle"
+                android:backgroundTint="#A0A0A0"
+                android:contentDescription="Clear"
+                android:padding="5dp"
+                android:scaleType="fitCenter"
+                android:src="@drawable/close" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <!-- Filter Category Pills -->
+    <HorizontalScrollView
+        android:layout_width="match_parent"
+        android:layout_height="36dp"
+        android:layout_marginVertical="10dp"
+        android:scrollbars="none">
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/tabAll"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:layout_marginEnd="8dp"
+                android:background="@drawable/oval"
+                android:backgroundTint="#0B5F63"
+                android:gravity="center"
+                android:paddingHorizontal="16dp"
+                android:text="All"
+                android:textColor="@color/white"
+                android:textSize="14sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/tabPeople"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:layout_marginEnd="8dp"
+                android:background="@drawable/oval"
+                android:gravity="center"
+                android:paddingHorizontal="16dp"
+                android:text="People"
+                android:textColor="@color/black"
+                android:textSize="14sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/tabPosts"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:layout_marginEnd="8dp"
+                android:background="@drawable/oval"
+                android:gravity="center"
+                android:paddingHorizontal="16dp"
+                android:text="Posts"
+                android:textColor="@color/black"
+                android:textSize="14sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+    </HorizontalScrollView>
+
+    <!-- Results Area -->
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:fillViewport="true">
+
+        <LinearLayout
+            android:id="@+id/containerSearchResults"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/tvNoResults"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:padding="30dp"
+                android:text="Type name or username to search..."
+                android:textColor="#65676B"
+                android:textSize="14sp" />
+        </LinearLayout>
+    </ScrollView>
+
+</LinearLayout>

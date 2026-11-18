@@ -1,0 +1,247 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/mainRootLayout"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#F3F0EA"
+    android:fillViewport="true">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="16dp">
+
+        <!-- Top Header Bar -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="4"
+                android:gravity="center_vertical"
+                android:text="Notifications"
+                android:textColor="@android:color/black"
+                android:textSize="22sp"
+                android:textStyle="bold" />
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="2"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <ImageButton
+                    android:id="@+id/search"
+                    android:layout_width="38dp"
+                    android:layout_height="38dp"
+                    android:layout_gravity="center"
+                    android:layout_marginEnd="10dp"
+                    android:background="@drawable/circle"
+                    android:backgroundTint="#dad5b8"
+                    android:contentDescription="Search"
+                    android:padding="8dp"
+                    android:scaleType="fitCenter"
+                    android:src="@drawable/search" />
+
+                <RelativeLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content">
+
+                    <ImageButton
+                        android:id="@+id/messenger"
+                        android:layout_width="38dp"
+                        android:layout_height="38dp"
+                        android:background="@drawable/circle"
+                        android:backgroundTint="#dad5b8"
+                        android:contentDescription="Messenger"
+                        android:padding="8dp"
+                        android:scaleType="fitCenter"
+                        android:src="@drawable/messenger" />
+
+                    <TextView
+                        android:layout_width="18dp"
+                        android:layout_height="18dp"
+                        android:layout_alignTop="@id/messenger"
+                        android:layout_alignEnd="@id/messenger"
+                        android:background="@drawable/circle"
+                        android:backgroundTint="@color/red"
+                        android:gravity="center"
+                        android:text="3"
+                        android:textColor="@color/white"
+                        android:textSize="10sp"
+                        android:textStyle="bold"
+                        android:translationX="4dp"
+                        android:translationY="-2dp" />
+                </RelativeLayout>
+            </LinearLayout>
+        </LinearLayout>
+
+        <!-- Navigation Bar Row -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="44dp"
+            android:layout_marginTop="8dp"
+            android:layout_marginBottom="12dp"
+            android:orientation="horizontal">
+
+                <LinearLayout
+                android:id="@+id/home"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:clickable="true"
+                android:focusable="true"
+                android:gravity="center">
+
+                <ImageButton
+                    android:layout_width="32dp"
+                    android:layout_height="32dp"
+                    android:background="@android:color/transparent"
+                    android:clickable="false"
+                    android:contentDescription="Home"
+                    android:focusable="false"
+                    android:padding="4dp"
+                    android:scaleType="fitCenter"
+                    android:src="@drawable/home" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/friends"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:clickable="true"
+                android:focusable="true"
+                android:gravity="center">
+
+                <ImageButton
+                    android:layout_width="32dp"
+                    android:layout_height="32dp"
+                    android:background="@android:color/transparent"
+                    android:clickable="false"
+                    android:contentDescription="Friends"
+                    android:focusable="false"
+                    android:padding="4dp"
+                    android:scaleType="fitCenter"
+                    android:src="@drawable/friends" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/market"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:clickable="true"
+                android:focusable="true"
+                android:gravity="center">
+
+                <ImageButton
+                    android:layout_width="30dp"
+                    android:layout_height="30dp"
+                    android:background="@android:color/transparent"
+                    android:clickable="false"
+                    android:contentDescription="Marketplace"
+                    android:focusable="false"
+                    android:padding="4dp"
+                    android:scaleType="fitCenter"
+                    android:src="@drawable/market" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/notification"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:clickable="true"
+                android:focusable="true"
+                android:gravity="center">
+
+                <ImageButton
+                    android:layout_width="32dp"
+                    android:layout_height="32dp"
+                    android:background="@android:color/transparent"
+                    android:clickable="false"
+                    android:contentDescription="Notification"
+                    android:focusable="false"
+                    android:padding="4dp"
+                    android:scaleType="fitCenter"
+                    android:src="@drawable/notification" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/menu"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:clickable="true"
+                android:focusable="true"
+                android:gravity="center">
+
+                <ImageButton
+                    android:layout_width="32dp"
+                    android:layout_height="32dp"
+                    android:background="@android:color/transparent"
+                    android:clickable="false"
+                    android:contentDescription="Menu"
+                    android:focusable="false"
+                    android:padding="4dp"
+                    android:scaleType="fitCenter"
+                    android:src="@drawable/menu" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <!-- New Notifications Section -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="8dp"
+            android:text="New"
+            android:textColor="@color/black"
+            android:textSize="18sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/tvNoNotifications"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginVertical="8dp"
+            android:text="No new notifications"
+            android:textColor="#65676B"
+            android:textSize="14sp"
+            android:visibility="gone" />
+
+        <LinearLayout
+            android:id="@+id/containerNotificationsNew"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp"
+            android:orientation="vertical" />
+
+        <!-- Earlier Notifications Section -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="8dp"
+            android:text="Earlier"
+            android:textColor="@color/black"
+            android:textSize="18sp"
+            android:textStyle="bold" />
+
+        <LinearLayout
+            android:id="@+id/containerNotificationsEarlier"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical" />
+    </LinearLayout>
+</ScrollView>

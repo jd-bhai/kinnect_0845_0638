@@ -24,4 +24,13 @@ object UserHelper {
             onDataChange(user)
         }
     }
+
+    fun loadUserData(context: Context, uid: String, onSuccess: (UserData) -> Unit, onFailure: ((String) -> Unit)? = null) {
+        val user = fetchUserData(context, uid)
+        if (user != null) {
+            onSuccess(user)
+        } else {
+            onFailure?.invoke("User not found")
+        }
+    }
 }

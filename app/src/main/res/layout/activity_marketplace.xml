@@ -86,17 +86,22 @@
         android:columnCount="5">
 
         <LinearLayout
+            android:id="@+id/home"
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_columnWeight="1"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:clickable="true"
+            android:focusable="true"
             android:gravity="center">
 
             <ImageButton
-                android:id="@+id/home"
                 android:layout_width="40dp"
                 android:layout_height="40dp"
                 android:background="@android:color/transparent"
+                android:clickable="false"
                 android:contentDescription="Home"
+                android:focusable="false"
                 android:padding="8dp"
                 android:scaleType="fitCenter"
                 android:src="@drawable/home" />
@@ -104,17 +109,22 @@
         </LinearLayout>
 
         <LinearLayout
+            android:id="@+id/friends"
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_columnWeight="1"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:clickable="true"
+            android:focusable="true"
             android:gravity="center">
 
             <ImageButton
-                android:id="@+id/friends"
                 android:layout_width="40dp"
                 android:layout_height="40dp"
                 android:background="@android:color/transparent"
+                android:clickable="false"
                 android:contentDescription="Friends"
+                android:focusable="false"
                 android:padding="8dp"
                 android:scaleType="fitCenter"
                 android:src="@drawable/friends" />
@@ -122,17 +132,22 @@
         </LinearLayout>
 
         <LinearLayout
+            android:id="@+id/market"
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_columnWeight="1"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:clickable="true"
+            android:focusable="true"
             android:gravity="center">
 
             <ImageButton
-                android:id="@+id/market"
                 android:layout_width="40dp"
                 android:layout_height="40dp"
                 android:background="@android:color/transparent"
+                android:clickable="false"
                 android:contentDescription="Marketplace"
+                android:focusable="false"
                 android:padding="8dp"
                 android:scaleType="fitCenter"
                 android:src="@drawable/market" />
@@ -140,17 +155,22 @@
         </LinearLayout>
 
         <LinearLayout
+            android:id="@+id/notification"
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_columnWeight="1"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:clickable="true"
+            android:focusable="true"
             android:gravity="center">
 
             <ImageButton
-                android:id="@+id/notification"
                 android:layout_width="40dp"
                 android:layout_height="40dp"
                 android:background="@android:color/transparent"
+                android:clickable="false"
                 android:contentDescription="Notifications"
+                android:focusable="false"
                 android:padding="8dp"
                 android:scaleType="fitCenter"
                 android:src="@drawable/notification" />
@@ -158,17 +178,22 @@
         </LinearLayout>
 
         <LinearLayout
+            android:id="@+id/menu"
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_columnWeight="1"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:clickable="true"
+            android:focusable="true"
             android:gravity="center">
 
             <ImageButton
-                android:id="@+id/menu"
                 android:layout_width="40dp"
                 android:layout_height="40dp"
                 android:background="@android:color/transparent"
+                android:clickable="false"
                 android:contentDescription="Menu"
+                android:focusable="false"
                 android:padding="10dp"
                 android:scaleType="fitCenter"
                 android:src="@drawable/menu" />
