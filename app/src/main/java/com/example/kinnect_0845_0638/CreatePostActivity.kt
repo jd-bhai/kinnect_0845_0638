@@ -121,7 +121,7 @@ class CreatePostActivity : AppCompatActivity() {
             ""
         }
 
-        dbHelper.createPost(uid, caption, base64ImageString)
+        SyncManager.enqueueOrSendPost(this, uid, caption, base64ImageString)
         Toast.makeText(this, "Post published!", Toast.LENGTH_SHORT).show()
         finish()
     }

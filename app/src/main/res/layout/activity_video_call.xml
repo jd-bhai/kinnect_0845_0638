@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/rl_video_call"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#0B5F63">
+
+    <!-- Full Screen Remote Video Container (Unobstructed face view) -->
+    <FrameLayout
+        android:id="@+id/fl_remote_video"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+
+    <!-- Top Status / Title Bar -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="20dp"
+        android:gravity="center_horizontal"
+        android:background="#44000000">
+
+        <TextView
+            android:id="@+id/tv_call_user_name"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="User"
+            android:textColor="#FFFFFF"
+            android:textSize="20sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/tv_call_status"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:text="Video Calling..."
+            android:textColor="#D1E8E6"
+            android:textSize="14sp" />
+    </LinearLayout>
+
+    <!-- Floating Local Camera Preview Container -->
+    <FrameLayout
+        android:id="@+id/fl_local_video"
+        android:layout_width="110dp"
+        android:layout_height="150dp"
+        android:layout_alignParentEnd="true"
+        android:layout_alignParentTop="true"
+        android:layout_marginEnd="16dp"
+        android:layout_marginTop="80dp"
+        android:background="@drawable/bg_rounded_card" />
+
+    <!-- Bottom Controls Row matching UI theme -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="90dp"
+        android:layout_alignParentBottom="true"
+        android:gravity="center"
+        android:orientation="horizontal"
+        android:paddingBottom="24dp">
+
+        <!-- Mute Audio Button -->
+        <ImageButton
+            android:id="@+id/btn_mute"
+            android:layout_width="52dp"
+            android:layout_height="52dp"
+            android:layout_marginEnd="16dp"
+            android:background="@drawable/circle"
+            android:backgroundTint="#248085"
+            android:contentDescription="Mute"
+            android:padding="12dp"
+            android:scaleType="fitCenter"
+            android:src="@drawable/microphone"
+            app:tint="#FFFFFF" />
+
+        <!-- End Call Button (Large Red Circle) -->
+        <ImageButton
+            android:id="@+id/btn_end_call"
+            android:layout_width="64dp"
+            android:layout_height="64dp"
+            android:background="@drawable/circle"
+            android:backgroundTint="#D93025"
+            android:contentDescription="End Call"
+            android:padding="14dp"
+            android:scaleType="fitCenter"
+            android:src="@drawable/close"
+            app:tint="#FFFFFF" />
+
+        <!-- Switch Camera Button -->
+        <ImageButton
+            android:id="@+id/btn_switch_camera"
+            android:layout_width="52dp"
+            android:layout_height="52dp"
+            android:layout_marginStart="16dp"
+            android:background="@drawable/circle"
+            android:backgroundTint="#248085"
+            android:contentDescription="Switch Camera"
+            android:padding="12dp"
+            android:scaleType="fitCenter"
+            android:src="@drawable/camera"
+            app:tint="#FFFFFF" />
+    </LinearLayout>
+
+</RelativeLayout>

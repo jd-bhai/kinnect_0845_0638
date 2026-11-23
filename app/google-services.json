@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "451072255279",
+    "project_id": "kinnect-2aa55",
+    "storage_bucket": "kinnect-2aa55.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:451072255279:android:cbd5d16f8375c42d93adda",
+        "android_client_info": {
+          "package_name": "com.teamalpha.i230845_p230638"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAPWxZHdgpdZNYUar2nn7Ic5Wi1zW0ePbs"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:451072255279:android:cbd5d16f8375c42d93adda",
+        "android_client_info": {
+          "package_name": "com.example.kinnect_0845_0638"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAPWxZHdgpdZNYUar2nn7Ic5Wi1zW0ePbs"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

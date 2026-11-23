@@ -1,5 +1,6 @@
 package com.example.kinnect_0845_0638
 
+import android.content.Intent
 import android.graphics.Color
 import android.graphics.Typeface
 import android.os.Bundle
@@ -56,14 +57,34 @@ class ChatActivity : AppCompatActivity() {
         }
 
         val btnBack = findViewById<ImageButton>(R.id.backButton)
+        val btnCall = findViewById<ImageButton>(R.id.callButton)
         tvAvatarInitials = findViewById(R.id.tvAvatarInitials)
         tvReceiverName = findViewById(R.id.tvReceiverName)
+        val tvReceiverStatus = findViewById<TextView>(R.id.tvReceiverStatus)
         etMessage = findViewById(R.id.etMessage)
         containerMessages = findViewById(R.id.containerMessages)
         scrollViewChat = findViewById(R.id.scrollViewChat)
         val btnSend = findViewById<ImageButton>(R.id.btnSend)
 
         btnBack?.setOnClickListener { finish() }
+
+        // Update Active Status
+        val receiverUser = dbHelper.getUserByUid(receiverUid)
+        if (receiverUser != null && receiverUser.isOnline) {
+            tvReceiverStatus?.text = "Active now"
+            tvReceiverStatus?.setTextColor(Color.parseColor("#27AE60"))
+        } else {
+            tvReceiverStatus?.text = "Offline"
+            tvReceiverStatus?.setTextColor(Color.parseColor("#888888"))
+        }
+
+        // Start Video Call via Agora
+        btnCall?.setOnClickListener {
+            val intent = Intent(this, VideoCallActivity::class.java).apply {
+                putExtra("CHANNEL_NAME", if (chatRoomId.isNotEmpty()) chatRoomId else "kinnect_call")
+            }
+            startActivity(intent)
+        }
 
         // Setup Header Title & Initials
         tvReceiverName.text = receiverName
@@ -101,10 +122,19 @@ class ChatActivity : AppCompatActivity() {
             dbHelper.markIncomingMessagesAsRead(chatRoomId, currentUid)
             loadMessages()
         }
+        val tvReceiverStatus = findViewById<TextView>(R.id.tvReceiverStatus)
+        val receiverUser = dbHelper.getUserByUid(receiverUid)
+        if (receiverUser != null && receiverUser.isOnline) {
+            tvReceiverStatus?.text = "Active now"
+            tvReceiverStatus?.setTextColor(Color.parseColor("#27AE60"))
+        } else {
+            tvReceiverStatus?.text = "Offline"
+            tvReceiverStatus?.setTextColor(Color.parseColor("#888888"))
+        }
     }
 
     private fun sendMessageToSQLite(senderUid: String, messageText: String) {
-        dbHelper.sendMessage(senderUid, receiverUid, messageText)
+        SyncManager.enqueueOrSendMessage(this, senderUid, receiverUid, messageText)
         etMessage.setText("")
     }
 

@@ -87,6 +87,13 @@ data class StoryData(
     val timestamp: Long = System.currentTimeMillis()
 )
 
+data class SyncQueueData(
+    val queueId: String = "",
+    val actionType: String = "",
+    val payloadJson: String = "",
+    val timestamp: Long = System.currentTimeMillis()
+)
+
 class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, null, DATABASE_VERSION) {
 
     companion object {
@@ -222,6 +229,15 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
             )
         """.trimIndent()
 
+        val createSyncQueueTable = """
+            CREATE TABLE sync_queue (
+                queueId TEXT PRIMARY KEY,
+                actionType TEXT,
+                payloadJson TEXT,
+                timestamp INTEGER
+            )
+        """.trimIndent()
+
         db.execSQL(createUsersTable)
         db.execSQL(createFriendsTable)
         db.execSQL(createFriendRequestsTable)
@@ -232,6 +248,7 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
         db.execSQL(createNotificationsTable)
         db.execSQL(createMarketplaceTable)
         db.execSQL(createStoriesTable)
+        db.execSQL(createSyncQueueTable)
     }
 
     override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) {
@@ -245,6 +262,7 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
         db.execSQL("DROP TABLE IF EXISTS notifications")
         db.execSQL("DROP TABLE IF EXISTS marketplace")
         db.execSQL("DROP TABLE IF EXISTS stories")
+        db.execSQL("DROP TABLE IF EXISTS sync_queue")
         onCreate(db)
     }
 
@@ -862,5 +880,43 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
         }
         cursor.close()
         return story
+    }
+
+    // --- OFFLINE SYNC QUEUE ---
+
+    fun addToSyncQueue(actionType: String, payloadJson: String): String {
+        val db = writableDatabase
+        val queueId = UUID.randomUUID().toString()
+        val values = ContentValues().apply {
+            put("queueId", queueId)
+            put("actionType", actionType)
+            put("payloadJson", payloadJson)
+            put("timestamp", System.currentTimeMillis())
+        }
+        db.insert("sync_queue", null, values)
+        return queueId
+    }
+
+    fun getSyncQueue(): List<SyncQueueData> {
+        val db = readableDatabase
+        val cursor = db.query("sync_queue", null, null, null, null, null, "timestamp ASC")
+        val queue = mutableListOf<SyncQueueData>()
+        while (cursor.moveToNext()) {
+            queue.add(
+                SyncQueueData(
+                    queueId = cursor.getString(cursor.getColumnIndexOrThrow("queueId")),
+                    actionType = cursor.getString(cursor.getColumnIndexOrThrow("actionType")) ?: "",
+                    payloadJson = cursor.getString(cursor.getColumnIndexOrThrow("payloadJson")) ?: "",
+                    timestamp = cursor.getLong(cursor.getColumnIndexOrThrow("timestamp"))
+                )
+            )
+        }
+        cursor.close()
+        return queue
+    }
+
+    fun removeFromSyncQueue(queueId: String): Boolean {
+        val db = writableDatabase
+        return db.delete("sync_queue", "queueId = ?", arrayOf(queueId)) > 0
     }
 }

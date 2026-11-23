@@ -61,12 +61,23 @@ class HomeFeedActivity : AppCompatActivity() {
         loadFriendsOnlyStories()
         loadPostsFromSQLite()
         setupNavigationListeners()
+
+        SyncManager.performSync(this) {
+            runOnUiThread {
+                loadPostsFromSQLite()
+            }
+        }
     }
 
     override fun onResume() {
         super.onResume()
         loadFriendsOnlyStories()
         loadPostsFromSQLite()
+        SyncManager.performSync(this) {
+            runOnUiThread {
+                loadPostsFromSQLite()
+            }
+        }
     }
 
     private fun loadCurrentUserData(
