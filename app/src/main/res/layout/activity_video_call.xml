@@ -35,9 +35,20 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="4dp"
-            android:text="Video Calling..."
+            android:text="Calling..."
             android:textColor="#D1E8E6"
             android:textSize="14sp" />
+
+        <TextView
+            android:id="@+id/tv_video_call_timer"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="2dp"
+            android:text=""
+            android:textColor="#FFFFFF"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            android:visibility="gone" />
     </LinearLayout>
 
     <!-- Floating Local Camera Preview Container -->

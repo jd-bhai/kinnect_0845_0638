@@ -67,7 +67,31 @@ class ChatsActivity : AppCompatActivity() {
     }
 
     private fun loadGeneralUserSuggestions(currentUid: String) {
-        val allUsers = dbHelper.getAllUsersExcept(currentUid)
+        var allUsers = dbHelper.getAllUsersExcept(currentUid)
+        if (allUsers.isEmpty()) {
+            dbHelper.insertUser(
+                UserData(
+                    uid = "demo_user_1",
+                    firstName = "Ammi",
+                    lastName = "",
+                    email = "ammi@gmail.com",
+                    username = "ammi",
+                    isOnline = true
+                )
+            )
+            dbHelper.insertUser(
+                UserData(
+                    uid = "demo_user_2",
+                    firstName = "Kinnect",
+                    lastName = "Partner",
+                    email = "partner@gmail.com",
+                    username = "partner",
+                    isOnline = true
+                )
+            )
+            allUsers = dbHelper.getAllUsersExcept(currentUid)
+        }
+
         for (user in allUsers) {
             val fullName = "${user.firstName} ${user.lastName}".trim()
             val initials = UserHelper.getUserInitials(user.firstName, user.lastName)

@@ -3,10 +3,10 @@ package com.example.kinnect_0845_0638
 import android.Manifest
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.graphics.Color
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
-import android.widget.FrameLayout
 import android.widget.ImageButton
 import android.widget.TextView
 import android.widget.Toast
@@ -21,11 +21,13 @@ import io.agora.rtc2.RtcEngineConfig
 class VoiceCallActivity : AppCompatActivity() {
 
     companion object {
-        private const val AGORA_APP_ID = "fcee5fa337474679a3dc7fda7774fa96"
+        private const val AGORA_APP_ID = "6f7694fccffb470bbc70bb634eaf2767"
+        private const val AGORA_TOKEN = "007eJxTYOjNNNq8weurt0eKv7L0o0pb/w+dNreN65rrZvr6WTFntCgwmKWZm1mapCUnp6UlmZgbJCUlgwgzY5PUxDQjczPz7GMs2Q2BjAxXtRazMDJAIIjPyZCcmJMTn5ibm8nAAAB86iAH"
         private const val PERMISSION_REQ_ID = 23
+        private const val CALL_TIMEOUT_MS = 15000L
     }
 
-    private var channelName: String = "kinnect_call"
+    private var channelName: String = "call_ammi"
     private var receiverName: String = "User"
     private var receiverInitials: String = "U"
     private var rtcEngine: RtcEngine? = null
@@ -42,11 +44,12 @@ class VoiceCallActivity : AppCompatActivity() {
     private var isSpeakerOn = true
     private var secondsElapsed = 0
     private var isCallConnected = false
+    private var isEndingCall = false
 
     private val timerHandler = Handler(Looper.getMainLooper())
     private val timerRunnable = object : Runnable {
         override fun run() {
-            if (isCallConnected) {
+            if (isCallConnected && !isEndingCall) {
                 secondsElapsed++
                 val minutes = secondsElapsed / 60
                 val secs = secondsElapsed % 60
@@ -56,11 +59,22 @@ class VoiceCallActivity : AppCompatActivity() {
         }
     }
 
+    private val timeoutHandler = Handler(Looper.getMainLooper())
+    private val timeoutRunnable = Runnable {
+        if (!isCallConnected && !isEndingCall) {
+            Toast.makeText(this, "Call unanswered", Toast.LENGTH_SHORT).show()
+            leaveCall()
+        }
+    }
+
     private val rtcEventHandler = object : IRtcEngineEventHandler() {
         override fun onUserJoined(uid: Int, elapsed: Int) {
             runOnUiThread {
+                timeoutHandler.removeCallbacks(timeoutRunnable)
                 isCallConnected = true
                 secondsElapsed = 0
+                tvCallTimer.setTextColor(Color.WHITE)
+                timerHandler.removeCallbacks(timerRunnable)
                 timerHandler.post(timerRunnable)
             }
         }
@@ -68,15 +82,19 @@ class VoiceCallActivity : AppCompatActivity() {
         override fun onUserOffline(uid: Int, reason: Int) {
             runOnUiThread {
                 isCallConnected = false
-                tvCallTimer.text = "Call Ended"
                 timerHandler.removeCallbacks(timerRunnable)
-                Handler(Looper.getMainLooper()).postDelayed({ finish() }, 1500)
+                tvCallTimer.text = "Disconnected"
+                tvCallTimer.setTextColor(Color.parseColor("#D93025"))
+                Handler(Looper.getMainLooper()).postDelayed({ finish() }, 500)
             }
         }
 
         override fun onJoinChannelSuccess(channel: String?, uid: Int, elapsed: Int) {
             runOnUiThread {
-                tvCallTimer.text = "Calling..."
+                if (!isCallConnected) {
+                    tvCallTimer.text = "Calling..."
+                    tvCallTimer.setTextColor(Color.parseColor("#D1E8E6"))
+                }
             }
         }
     }
@@ -85,7 +103,7 @@ class VoiceCallActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_voice_call)
 
-        channelName = intent.getStringExtra("CHANNEL_NAME") ?: "kinnect_call"
+        channelName = intent.getStringExtra("CHANNEL_NAME") ?: "call_ammi"
         receiverName = intent.getStringExtra("RECEIVER_NAME") ?: "User"
         receiverInitials = intent.getStringExtra("RECEIVER_INITIALS") ?: "U"
 
@@ -99,6 +117,10 @@ class VoiceCallActivity : AppCompatActivity() {
 
         tvUserInitials.text = receiverInitials
         tvUserName.text = receiverName
+        tvCallTimer.text = "Calling..."
+        tvCallTimer.setTextColor(Color.parseColor("#D1E8E6"))
+
+        timeoutHandler.postDelayed(timeoutRunnable, CALL_TIMEOUT_MS)
 
         btnMute.setOnClickListener {
             isMuted = !isMuted
@@ -171,7 +193,8 @@ class VoiceCallActivity : AppCompatActivity() {
             rtcEngine?.enableAudio()
             rtcEngine?.setEnableSpeakerphone(true)
 
-            rtcEngine?.joinChannel(null, channelName, "", 0)
+            val tokenToUse = intent.getStringExtra("AGORA_TOKEN") ?: AGORA_TOKEN
+            rtcEngine?.joinChannel(tokenToUse, channelName, "", 0)
         } catch (e: Exception) {
             Toast.makeText(this, "Error initializing voice call: ${e.message}", Toast.LENGTH_LONG).show()
             finish()
@@ -179,15 +202,27 @@ class VoiceCallActivity : AppCompatActivity() {
     }
 
     private fun leaveCall() {
+        if (isEndingCall) return
+        isEndingCall = true
         isCallConnected = false
+
+        timeoutHandler.removeCallbacks(timeoutRunnable)
         timerHandler.removeCallbacks(timerRunnable)
+
+        tvCallTimer.text = "Disconnected"
+        tvCallTimer.setTextColor(Color.parseColor("#D93025"))
+
         rtcEngine?.leaveChannel()
-        finish()
+        Handler(Looper.getMainLooper()).postDelayed({
+            finish()
+        }, 500)
     }
 
     override fun onDestroy() {
         super.onDestroy()
+        isEndingCall = true
         isCallConnected = false
+        timeoutHandler.removeCallbacks(timeoutRunnable)
         timerHandler.removeCallbacks(timerRunnable)
         rtcEngine?.leaveChannel()
         RtcEngine.destroy()

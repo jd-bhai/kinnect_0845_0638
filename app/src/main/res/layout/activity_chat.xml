@@ -63,15 +63,28 @@
                 android:textSize="12sp" />
         </LinearLayout>
 
+        <!-- Voice Call Button -->
         <ImageButton
-            android:id="@+id/callButton"
+            android:id="@+id/voiceCallButton"
             android:layout_width="36dp"
             android:layout_height="36dp"
+            android:layout_marginEnd="6dp"
             android:background="@android:color/transparent"
-            android:contentDescription="Call"
+            android:contentDescription="Voice Call"
             android:padding="6dp"
             android:scaleType="fitCenter"
             android:src="@drawable/call" />
+
+        <!-- Video Call Button -->
+        <ImageButton
+            android:id="@+id/videoCallButton"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:background="@android:color/transparent"
+            android:contentDescription="Video Call"
+            android:padding="6dp"
+            android:scaleType="fitCenter"
+            android:src="@drawable/camera" />
     </LinearLayout>
 
     <View

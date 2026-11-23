@@ -57,7 +57,8 @@ class ChatActivity : AppCompatActivity() {
         }
 
         val btnBack = findViewById<ImageButton>(R.id.backButton)
-        val btnCall = findViewById<ImageButton>(R.id.callButton)
+        val voiceCallBtn = findViewById<ImageButton>(R.id.voiceCallButton)
+        val videoCallBtn = findViewById<ImageButton>(R.id.videoCallButton)
         tvAvatarInitials = findViewById(R.id.tvAvatarInitials)
         tvReceiverName = findViewById(R.id.tvReceiverName)
         val tvReceiverStatus = findViewById<TextView>(R.id.tvReceiverStatus)
@@ -78,20 +79,39 @@ class ChatActivity : AppCompatActivity() {
             tvReceiverStatus?.setTextColor(Color.parseColor("#888888"))
         }
 
-        // Start Video Call via Agora
-        btnCall?.setOnClickListener {
+        val cleanChannelName = if (receiverName.isNotEmpty()) {
+            "call_${receiverName.replace(" ", "_").lowercase()}"
+        } else {
+            "kinnect_call"
+        }
+
+        val nameParts = receiverName.split(" ")
+        val firstName = nameParts.getOrNull(0) ?: ""
+        val lastName = nameParts.getOrNull(1) ?: ""
+        val initials = UserHelper.getUserInitials(firstName, lastName)
+
+        // 1. Voice Call Button -> Launches VoiceCallActivity
+        voiceCallBtn?.setOnClickListener {
+            val intent = Intent(this, VoiceCallActivity::class.java).apply {
+                putExtra("CHANNEL_NAME", cleanChannelName)
+                putExtra("RECEIVER_NAME", receiverName)
+                putExtra("RECEIVER_INITIALS", initials)
+            }
+            startActivity(intent)
+        }
+
+        // 2. Video Call Button -> Launches VideoCallActivity
+        videoCallBtn?.setOnClickListener {
             val intent = Intent(this, VideoCallActivity::class.java).apply {
-                putExtra("CHANNEL_NAME", if (chatRoomId.isNotEmpty()) chatRoomId else "kinnect_call")
+                putExtra("CHANNEL_NAME", cleanChannelName)
+                putExtra("RECEIVER_NAME", receiverName)
             }
             startActivity(intent)
         }
 
         // Setup Header Title & Initials
         tvReceiverName.text = receiverName
-        val nameParts = receiverName.split(" ")
-        val firstName = nameParts.getOrNull(0) ?: ""
-        val lastName = nameParts.getOrNull(1) ?: ""
-        tvAvatarInitials.text = UserHelper.getUserInitials(firstName, lastName)
+        tvAvatarInitials.text = initials
 
         // Send or Edit Message
         btnSend?.setOnClickListener {
