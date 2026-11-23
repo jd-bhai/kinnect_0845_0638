@@ -1,9 +1,15 @@
 package com.example.kinnect_0845_0638
 
 import android.content.Intent
+import android.database.ContentObserver
 import android.graphics.Color
 import android.graphics.Typeface
+import android.net.Uri
+import android.os.Build
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
+import android.provider.MediaStore
 import android.view.Gravity
 import android.view.View
 import android.widget.EditText
@@ -32,6 +38,7 @@ class ChatActivity : AppCompatActivity() {
     private var receiverName: String = ""
     private var chatRoomId: String = ""
     private var editingMessageId: String? = null
+    private var screenshotObserver: ContentObserver? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -133,6 +140,53 @@ class ChatActivity : AppCompatActivity() {
             dbHelper.markIncomingMessagesAsRead(chatRoomId, currentUid)
             loadMessages()
         }
+
+        // Setup Screenshot Detection
+        setupScreenshotDetection()
+    }
+
+    private fun setupScreenshotDetection() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+            val callback = ScreenCaptureCallback {
+                onScreenshotTaken()
+            }
+            registerScreenCaptureCallback(mainExecutor, callback)
+        } else {
+            setupContentObserverScreenshotDetection()
+        }
+    }
+
+    private fun setupContentObserverScreenshotDetection() {
+        screenshotObserver = object : ContentObserver(Handler(Looper.getMainLooper())) {
+            override fun onChange(selfChange: Boolean, uri: Uri?) {
+                super.onChange(selfChange, uri)
+                if (uri != null && uri.toString().lowercase().contains("screenshot")) {
+                    onScreenshotTaken()
+                }
+            }
+        }
+        try {
+            contentResolver.registerContentObserver(
+                MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+                true,
+                screenshotObserver!!
+            )
+        } catch (_: Exception) {}
+    }
+
+    private fun onScreenshotTaken() {
+        Toast.makeText(this, "📸 Screenshot taken of this chat!", Toast.LENGTH_LONG).show()
+        val currentUid = SessionManager.getCurrentUserUid(this) ?: return
+        if (receiverUid.isNotEmpty()) {
+            dbHelper.addNotification(
+                receiverUid = receiverUid,
+                senderUid = currentUid,
+                senderName = "Chat Security",
+                targetUid = receiverUid,
+                type = "chat",
+                message = "took a screenshot of your chat conversation!"
+            )
+        }
     }
 
     override fun onResume() {
@@ -150,6 +204,15 @@ class ChatActivity : AppCompatActivity() {
         } else {
             tvReceiverStatus?.text = "Offline"
             tvReceiverStatus?.setTextColor(Color.parseColor("#888888"))
+        }
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        screenshotObserver?.let {
+            try {
+                contentResolver.unregisterContentObserver(it)
+            } catch (_: Exception) {}
         }
     }
 
