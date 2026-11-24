@@ -16,7 +16,6 @@
             android:id="@+id/storyMedia"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:src="@drawable/default_gallery"
             android:scaleType="centerCrop" />
 
         <!-- Header Bar -->
@@ -74,16 +73,17 @@
 
         <!-- Caption Overlay Tag -->
         <TextView
+            android:id="@+id/tvStoryCaption"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_centerInParent="true"
             android:background="#C0B55F63"
             android:paddingHorizontal="16dp"
             android:paddingVertical="10dp"
-            android:text="Saturday plans"
             android:textColor="@color/white"
             android:textSize="20sp"
-            android:textStyle="bold" />
+            android:textStyle="bold"
+            android:visibility="gone" />
     </RelativeLayout>
 
     <!-- Bottom Actions & Viewer Count Bar -->

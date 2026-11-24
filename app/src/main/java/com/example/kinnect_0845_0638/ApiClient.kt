@@ -1,5 +1,6 @@
 package com.example.kinnect_0845_0638
 
+import android.util.Log
 import java.io.BufferedReader
 import java.io.InputStreamReader
 import java.io.OutputStreamWriter
@@ -8,11 +9,11 @@ import java.net.URL
 import java.net.URLEncoder
 
 object ApiClient {
-    const val BASE_URL = "http://10.0.2.2:8000/"
+    private const val TAG = "ApiClient"
 
     fun post(endpoint: String, params: Map<String, String>): String? {
         return try {
-            val url = URL(BASE_URL + endpoint)
+            val url = URL(ApiConfig.BASE_URL + endpoint)
             val conn = url.openConnection() as HttpURLConnection
             conn.requestMethod = "POST"
             conn.connectTimeout = 5000
@@ -42,16 +43,18 @@ object ApiClient {
                 reader.close()
                 response.toString()
             } else {
+                Log.e(TAG, "POST $endpoint failed with code ${conn.responseCode}")
                 null
             }
         } catch (e: Exception) {
+            Log.e(TAG, "POST $endpoint Exception: ${e.message}", e)
             null
         }
     }
 
     fun get(endpoint: String, params: Map<String, String> = emptyMap()): String? {
         return try {
-            val urlBuilder = StringBuilder(BASE_URL + endpoint)
+            val urlBuilder = StringBuilder(ApiConfig.BASE_URL + endpoint)
             if (params.isNotEmpty()) {
                 urlBuilder.append('?')
                 for ((key, value) in params) {
@@ -78,9 +81,11 @@ object ApiClient {
                 reader.close()
                 response.toString()
             } else {
+                Log.e(TAG, "GET $endpoint failed with code ${conn.responseCode}")
                 null
             }
         } catch (e: Exception) {
+            Log.e(TAG, "GET $endpoint Exception: ${e.message}", e)
             null
         }
     }

@@ -8,7 +8,6 @@ import android.os.Bundle
 import android.util.Base64
 import android.view.View
 import android.widget.GridLayout
-import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.RelativeLayout
@@ -39,11 +38,17 @@ class MarketplaceActivity : AppCompatActivity() {
 
         gridMarketItems = findViewById(R.id.gridMarketItems)
 
-        val btnHome = findViewById<ImageButton>(R.id.home)
-        val btnFriends = findViewById<ImageButton>(R.id.friends)
-        val btnSell = findViewById<LinearLayout>(R.id.btnSell)
+        // Fix: Use View instead of ImageButton to prevent ClassCastException crash
+        val btnHome = findViewById<View>(R.id.home)
+        val btnFriends = findViewById<View>(R.id.friends)
+        val btnMarket = findViewById<View>(R.id.market)
+        val btnNotifications = findViewById<View>(R.id.notification)
+        val btnMenu = findViewById<View>(R.id.menu)
+        val btnSearch = findViewById<View>(R.id.search)
+        val btnMessenger = findViewById<View>(R.id.messenger)
+        val btnSell = findViewById<View>(R.id.btnSell)
 
-        // Navigate to Home Feed
+        // Bottom Navigation Tabs
         btnHome?.setOnClickListener {
             val intent = Intent(this, HomeFeedActivity::class.java)
             intent.flags = Intent.FLAG_ACTIVITY_REORDER_TO_FRONT
@@ -51,9 +56,31 @@ class MarketplaceActivity : AppCompatActivity() {
             finish()
         }
 
-        // Navigate to Friends
         btnFriends?.setOnClickListener {
             val intent = Intent(this, FriendsActivity::class.java)
+            startActivity(intent)
+            finish()
+        }
+
+        btnNotifications?.setOnClickListener {
+            val intent = Intent(this, NotificationsActivity::class.java)
+            startActivity(intent)
+            finish()
+        }
+
+        btnMenu?.setOnClickListener {
+            val intent = Intent(this, MenuActivity::class.java)
+            startActivity(intent)
+            finish()
+        }
+
+        btnSearch?.setOnClickListener {
+            val intent = Intent(this, SearchActivity::class.java)
+            startActivity(intent)
+        }
+
+        btnMessenger?.setOnClickListener {
+            val intent = Intent(this, ChatsActivity::class.java)
             startActivity(intent)
         }
 
@@ -98,7 +125,6 @@ class MarketplaceActivity : AppCompatActivity() {
             setPadding(8.dpToPx(), 8.dpToPx(), 8.dpToPx(), 8.dpToPx())
         }
 
-        // Image View
         val ivItem = ImageView(this).apply {
             id = View.generateViewId()
             layoutParams = RelativeLayout.LayoutParams(
@@ -118,7 +144,6 @@ class MarketplaceActivity : AppCompatActivity() {
         }
         card.addView(ivItem)
 
-        // Price Text
         val tvPrice = TextView(this).apply {
             id = View.generateViewId()
             val params = RelativeLayout.LayoutParams(
@@ -136,7 +161,6 @@ class MarketplaceActivity : AppCompatActivity() {
         }
         card.addView(tvPrice)
 
-        // Title Text
         val tvTitle = TextView(this).apply {
             id = View.generateViewId()
             val params = RelativeLayout.LayoutParams(
@@ -152,7 +176,6 @@ class MarketplaceActivity : AppCompatActivity() {
         }
         card.addView(tvTitle)
 
-        // Location Text
         val tvLocation = TextView(this).apply {
             val params = RelativeLayout.LayoutParams(
                 RelativeLayout.LayoutParams.WRAP_CONTENT,
