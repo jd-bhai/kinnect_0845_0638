@@ -26,7 +26,29 @@ object SyncManager {
                     }
                 }
 
-                // 2. Fetch Latest Posts from PHP API -> Cache in SQLite
+                // 2. Fetch All Registered Users from PHP API -> Cache in SQLite
+                val usersResponse = ApiClient.get("auth.php", mapOf("action" to "get_all"))
+                if (!usersResponse.isNullOrEmpty()) {
+                    val jsonObj = JSONObject(usersResponse)
+                    if (jsonObj.optString("status") == "success") {
+                        val usersArray = jsonObj.optJSONArray("users") ?: JSONArray()
+                        for (i in 0 until usersArray.length()) {
+                            val uObj = usersArray.getJSONObject(i)
+                            dbHelper.insertUser(
+                                UserData(
+                                    uid = uObj.optString("uid"),
+                                    firstName = uObj.optString("firstName"),
+                                    lastName = uObj.optString("lastName"),
+                                    email = uObj.optString("email"),
+                                    username = uObj.optString("username"),
+                                    profilePicUrl = uObj.optString("profilePicUrl")
+                                )
+                            )
+                        }
+                    }
+                }
+
+                // 3. Fetch Latest Posts from PHP API -> Cache in SQLite
                 val postsResponse = ApiClient.get("posts.php", mapOf("action" to "get_all", "currentUid" to currentUid))
                 if (!postsResponse.isNullOrEmpty()) {
                     val jsonObj = JSONObject(postsResponse)

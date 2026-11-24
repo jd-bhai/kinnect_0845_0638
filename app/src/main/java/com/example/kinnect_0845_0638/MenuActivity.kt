@@ -78,6 +78,11 @@ class MenuActivity : AppCompatActivity() {
         btnMarket?.setOnClickListener(openMarketplace)
         cardMarketplace?.setOnClickListener(openMarketplace)
 
+        findViewById<View>(R.id.search)?.setOnClickListener {
+            val intent = Intent(this, SearchActivity::class.java)
+            startActivity(intent)
+        }
+
         findViewById<View>(R.id.notification)?.setOnClickListener {
             val intent = Intent(this, NotificationsActivity::class.java)
             startActivity(intent)

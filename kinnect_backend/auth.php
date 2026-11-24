@@ -52,6 +52,21 @@ switch ($action) {
         }
         break;
 
+    case 'get_all':
+        $stmt = $pdo->query("SELECT uid, firstName, lastName, email, username, isOnline, profilePicUrl FROM users ORDER BY createdAt DESC");
+        $users = $stmt->fetchAll();
+        echo json_encode(["status" => "success", "users" => $users]);
+        break;
+
+    case 'search':
+        $query = $_GET['query'] ?? $_POST['query'] ?? '';
+        $pattern = "%$query%";
+        $stmt = $pdo->prepare("SELECT uid, firstName, lastName, email, username, isOnline, profilePicUrl FROM users WHERE firstName LIKE ? OR lastName LIKE ? OR username LIKE ? OR email LIKE ?");
+        $stmt->execute([$pattern, $pattern, $pattern, $pattern]);
+        $users = $stmt->fetchAll();
+        echo json_encode(["status" => "success", "users" => $users]);
+        break;
+
     case 'update_fcm_token':
         $uid      = $_POST['uid'] ?? '';
         $fcmToken = $_POST['fcmToken'] ?? '';

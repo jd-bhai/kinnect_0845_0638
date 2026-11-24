@@ -291,10 +291,32 @@ class FriendsActivity : AppCompatActivity() {
             finish()
         }
 
+        findViewById<View>(R.id.tabMarketplace)?.setOnClickListener {
+            val intent = Intent(this, MarketplaceActivity::class.java)
+            startActivity(intent)
+            finish()
+        }
+
+        findViewById<View>(R.id.tabNotifications)?.setOnClickListener {
+            val intent = Intent(this, NotificationsActivity::class.java)
+            startActivity(intent)
+            finish()
+        }
+
         findViewById<View>(R.id.tabMenu)?.setOnClickListener {
             val intent = Intent(this, MenuActivity::class.java)
             startActivity(intent)
             finish()
+        }
+
+        findViewById<View>(R.id.btnSearch)?.setOnClickListener {
+            val intent = Intent(this, SearchActivity::class.java)
+            startActivity(intent)
+        }
+
+        findViewById<View>(R.id.btnMessenger)?.setOnClickListener {
+            val intent = Intent(this, ChatsActivity::class.java)
+            startActivity(intent)
         }
     }
 
