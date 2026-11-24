@@ -513,6 +513,18 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
         return postId
     }
 
+    fun insertOrUpdatePost(postId: String, authorUid: String, caption: String, imageUri: String, timestamp: Long) {
+        val db = writableDatabase
+        val values = ContentValues().apply {
+            put("postId", if (postId.isNotEmpty()) postId else UUID.randomUUID().toString())
+            put("authorUid", authorUid)
+            put("caption", caption)
+            put("imageUri", imageUri)
+            put("timestamp", if (timestamp > 0) timestamp else System.currentTimeMillis())
+        }
+        db.insertWithOnConflict("posts", null, values, android.database.sqlite.SQLiteDatabase.CONFLICT_REPLACE)
+    }
+
     fun getAllPosts(currentUid: String = ""): List<PostData> {
         val db = readableDatabase
         val cursor = db.query("posts", null, null, null, null, null, "timestamp DESC")

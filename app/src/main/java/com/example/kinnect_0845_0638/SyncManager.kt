@@ -34,9 +34,11 @@ object SyncManager {
                         val postsArray = jsonObj.optJSONArray("posts") ?: JSONArray()
                         for (i in 0 until postsArray.length()) {
                             val pObj = postsArray.getJSONObject(i)
+                            val postId = pObj.optString("postId")
                             val authorUid = pObj.optString("authorUid")
                             val caption = pObj.optString("caption")
                             val imageUri = pObj.optString("imageUri")
+                            val timestamp = pObj.optLong("timestamp")
                             val firstName = pObj.optString("firstName")
                             val lastName = pObj.optString("lastName")
                             val profilePicUrl = pObj.optString("profilePicUrl")
@@ -50,8 +52,8 @@ object SyncManager {
                                         profilePicUrl = profilePicUrl
                                     )
                                 )
+                                dbHelper.insertOrUpdatePost(postId, authorUid, caption, imageUri, timestamp)
                             }
-                            dbHelper.createPost(authorUid, caption, imageUri)
                         }
                     }
                 }
