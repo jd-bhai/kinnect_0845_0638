@@ -146,12 +146,16 @@ class ChatActivity : AppCompatActivity() {
     }
 
     private fun setupScreenshotDetection() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
-            val callback = ScreenCaptureCallback {
-                onScreenshotTaken()
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+                val callback = ScreenCaptureCallback {
+                    onScreenshotTaken()
+                }
+                registerScreenCaptureCallback(mainExecutor, callback)
+            } else {
+                setupContentObserverScreenshotDetection()
             }
-            registerScreenCaptureCallback(mainExecutor, callback)
-        } else {
+        } catch (_: Throwable) {
             setupContentObserverScreenshotDetection()
         }
     }
