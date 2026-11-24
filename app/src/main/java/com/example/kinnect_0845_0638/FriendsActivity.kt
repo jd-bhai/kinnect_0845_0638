@@ -26,7 +26,6 @@ class FriendsActivity : AppCompatActivity() {
 
         dbHelper = DatabaseHelper.getInstance(this)
 
-        // Handle Window Insets Padding
         val mainLayout = findViewById<View>(R.id.mainRootLayout)
         if (mainLayout != null) {
             ViewCompat.setOnApplyWindowInsetsListener(mainLayout) { view, insets ->
@@ -40,12 +39,19 @@ class FriendsActivity : AppCompatActivity() {
         containerSuggestions = findViewById(R.id.containerSuggestions)
         tvRequestCountBadge = findViewById(R.id.tvRequestCountBadge)
 
-        // Navigation setup
         setupNavigationTabs()
-
-        // Load Friend Requests and Suggestions from SQLite
         loadFriendRequests()
         loadPeopleYouMayKnow()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        SyncManager.performSync(this) {
+            runOnUiThread {
+                loadFriendRequests()
+                loadPeopleYouMayKnow()
+            }
+        }
     }
 
     private fun loadFriendRequests() {
@@ -71,7 +77,6 @@ class FriendsActivity : AppCompatActivity() {
             orientation = LinearLayout.HORIZONTAL
         }
 
-        // Avatar Initials Circle
         val tvAvatar = TextView(this).apply {
             layoutParams = LinearLayout.LayoutParams(
                 70.dpToPx(),
@@ -86,7 +91,6 @@ class FriendsActivity : AppCompatActivity() {
             backgroundTintList = android.content.res.ColorStateList.valueOf(Color.parseColor("#0B5F63"))
         }
 
-        // Mid Content (Name, Mutuals, Buttons)
         val midLayout = LinearLayout(this).apply {
             layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.MATCH_PARENT, 5f)
             orientation = LinearLayout.VERTICAL
@@ -160,7 +164,6 @@ class FriendsActivity : AppCompatActivity() {
         midLayout.addView(tvMutuals)
         midLayout.addView(btnContainer)
 
-        // Time Side Text
         val timeLayout = LinearLayout(this).apply {
             layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.MATCH_PARENT, 1f)
         }
@@ -187,9 +190,15 @@ class FriendsActivity : AppCompatActivity() {
 
         val allUsers = dbHelper.getAllUsersExcept(currentUid)
         for (user in allUsers) {
-            val fullName = "${user.firstName} ${user.lastName}".trim()
-            val initials = UserHelper.getUserInitials(user.firstName, user.lastName)
-            addSuggestionRow(user.uid, fullName, initials)
+            val isFriend = dbHelper.isFriend(currentUid, user.uid)
+            val hasSent = dbHelper.hasSentFriendRequest(currentUid, user.uid)
+            val hasReceived = dbHelper.hasSentFriendRequest(user.uid, currentUid)
+
+            if (!isFriend && !hasSent && !hasReceived) {
+                val fullName = "${user.firstName} ${user.lastName}".trim()
+                val initials = UserHelper.getUserInitials(user.firstName, user.lastName)
+                addSuggestionRow(user.uid, fullName, initials)
+            }
         }
     }
 
@@ -242,7 +251,8 @@ class FriendsActivity : AppCompatActivity() {
             setBackgroundColor(Color.parseColor("#0B5F63"))
 
             setOnClickListener {
-                sendFriendRequest(targetUid)
+                val senderUid = SessionManager.getCurrentUserUid(this@FriendsActivity) ?: ""
+                SyncManager.enqueueOrSendFriendRequest(this@FriendsActivity, senderUid, targetUid)
                 text = "Sent"
                 isEnabled = false
                 setBackgroundColor(Color.GRAY)
@@ -258,11 +268,10 @@ class FriendsActivity : AppCompatActivity() {
 
     private fun acceptFriendRequest(senderUid: String) {
         val currentUid = SessionManager.getCurrentUserUid(this) ?: return
-        val success = dbHelper.acceptFriendRequest(currentUid, senderUid)
-        if (success) {
-            Toast.makeText(this, "Friend request accepted!", Toast.LENGTH_SHORT).show()
-            loadFriendRequests()
-        }
+        SyncManager.enqueueOrAcceptFriendRequest(this, currentUid, senderUid)
+        Toast.makeText(this, "Friend request accepted!", Toast.LENGTH_SHORT).show()
+        loadFriendRequests()
+        loadPeopleYouMayKnow()
     }
 
     private fun deleteFriendRequest(senderUid: String) {
@@ -271,14 +280,7 @@ class FriendsActivity : AppCompatActivity() {
         if (success) {
             Toast.makeText(this, "Friend request deleted", Toast.LENGTH_SHORT).show()
             loadFriendRequests()
-        }
-    }
-
-    private fun sendFriendRequest(targetUid: String) {
-        val currentUid = SessionManager.getCurrentUserUid(this) ?: return
-        val success = dbHelper.sendFriendRequest(currentUid, targetUid)
-        if (success) {
-            Toast.makeText(this, "Friend request sent!", Toast.LENGTH_SHORT).show()
+            loadPeopleYouMayKnow()
         }
     }
 
@@ -290,9 +292,7 @@ class FriendsActivity : AppCompatActivity() {
         }
 
         findViewById<View>(R.id.tabMenu)?.setOnClickListener {
-            SessionManager.logout(this)
-            val intent = Intent(this, LoginActivity::class.java)
-            intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+            val intent = Intent(this, MenuActivity::class.java)
             startActivity(intent)
             finish()
         }
