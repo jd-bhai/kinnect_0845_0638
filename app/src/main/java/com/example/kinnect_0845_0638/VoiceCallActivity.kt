@@ -7,6 +7,7 @@ import android.graphics.Color
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import android.util.Log
 import android.widget.ImageButton
 import android.widget.TextView
 import android.widget.Toast
@@ -49,13 +50,15 @@ class VoiceCallActivity : AppCompatActivity() {
     private val timerHandler = Handler(Looper.getMainLooper())
     private val timerRunnable = object : Runnable {
         override fun run() {
-            if (isCallConnected && !isEndingCall) {
-                secondsElapsed++
-                val minutes = secondsElapsed / 60
-                val secs = secondsElapsed % 60
-                tvCallTimer.text = String.format("%02d:%02d", minutes, secs)
-                timerHandler.postDelayed(this, 1000)
-            }
+            try {
+                if (isCallConnected && !isEndingCall) {
+                    secondsElapsed++
+                    val minutes = secondsElapsed / 60
+                    val secs = secondsElapsed % 60
+                    tvCallTimer.text = String.format("%02d:%02d", minutes, secs)
+                    timerHandler.postDelayed(this, 1000)
+                }
+            } catch (_: Exception) {}
         }
     }
 
@@ -70,31 +73,37 @@ class VoiceCallActivity : AppCompatActivity() {
     private val rtcEventHandler = object : IRtcEngineEventHandler() {
         override fun onUserJoined(uid: Int, elapsed: Int) {
             runOnUiThread {
-                timeoutHandler.removeCallbacks(timeoutRunnable)
-                isCallConnected = true
-                secondsElapsed = 0
-                tvCallTimer.setTextColor(Color.WHITE)
-                timerHandler.removeCallbacks(timerRunnable)
-                timerHandler.post(timerRunnable)
+                try {
+                    timeoutHandler.removeCallbacks(timeoutRunnable)
+                    isCallConnected = true
+                    secondsElapsed = 0
+                    tvCallTimer.setTextColor(Color.WHITE)
+                    timerHandler.removeCallbacks(timerRunnable)
+                    timerHandler.post(timerRunnable)
+                } catch (_: Exception) {}
             }
         }
 
         override fun onUserOffline(uid: Int, reason: Int) {
             runOnUiThread {
-                isCallConnected = false
-                timerHandler.removeCallbacks(timerRunnable)
-                tvCallTimer.text = "Disconnected"
-                tvCallTimer.setTextColor(Color.parseColor("#D93025"))
-                Handler(Looper.getMainLooper()).postDelayed({ finish() }, 500)
+                try {
+                    isCallConnected = false
+                    timerHandler.removeCallbacks(timerRunnable)
+                    tvCallTimer.text = "Disconnected"
+                    tvCallTimer.setTextColor(Color.parseColor("#D93025"))
+                    Handler(Looper.getMainLooper()).postDelayed({ finish() }, 500)
+                } catch (_: Exception) {}
             }
         }
 
         override fun onJoinChannelSuccess(channel: String?, uid: Int, elapsed: Int) {
             runOnUiThread {
-                if (!isCallConnected) {
-                    tvCallTimer.text = "Calling..."
-                    tvCallTimer.setTextColor(Color.parseColor("#D1E8E6"))
-                }
+                try {
+                    if (!isCallConnected) {
+                        tvCallTimer.text = "Calling..."
+                        tvCallTimer.setTextColor(Color.parseColor("#D1E8E6"))
+                    }
+                } catch (_: Exception) {}
             }
         }
     }
@@ -123,17 +132,21 @@ class VoiceCallActivity : AppCompatActivity() {
         timeoutHandler.postDelayed(timeoutRunnable, CALL_TIMEOUT_MS)
 
         btnMute.setOnClickListener {
-            isMuted = !isMuted
-            rtcEngine?.muteLocalAudioStream(isMuted)
-            btnMute.isActivated = isMuted
-            Toast.makeText(this, if (isMuted) "Microphone Muted" else "Microphone Unmuted", Toast.LENGTH_SHORT).show()
+            try {
+                isMuted = !isMuted
+                rtcEngine?.muteLocalAudioStream(isMuted)
+                btnMute.isActivated = isMuted
+                Toast.makeText(this, if (isMuted) "Microphone Muted" else "Microphone Unmuted", Toast.LENGTH_SHORT).show()
+            } catch (_: Exception) {}
         }
 
         btnSpeaker.setOnClickListener {
-            isSpeakerOn = !isSpeakerOn
-            rtcEngine?.setEnableSpeakerphone(isSpeakerOn)
-            btnSpeaker.isActivated = isSpeakerOn
-            Toast.makeText(this, if (isSpeakerOn) "Speakerphone On" else "Speakerphone Off", Toast.LENGTH_SHORT).show()
+            try {
+                isSpeakerOn = !isSpeakerOn
+                rtcEngine?.setEnableSpeakerphone(isSpeakerOn)
+                btnSpeaker.isActivated = isSpeakerOn
+                Toast.makeText(this, if (isSpeakerOn) "Speakerphone On" else "Speakerphone Off", Toast.LENGTH_SHORT).show()
+            } catch (_: Exception) {}
         }
 
         btnSwitchToVideo.setOnClickListener {
@@ -193,10 +206,12 @@ class VoiceCallActivity : AppCompatActivity() {
             rtcEngine?.enableAudio()
             rtcEngine?.setEnableSpeakerphone(true)
 
-            val tokenToUse = intent.getStringExtra("AGORA_TOKEN") ?: AGORA_TOKEN
-            rtcEngine?.joinChannel(tokenToUse, channelName, "", 0)
+            val tokenToUse = intent.getStringExtra("AGORA_TOKEN")
+            val finalToken = if (!tokenToUse.isNullOrEmpty()) tokenToUse else AGORA_TOKEN
+            rtcEngine?.joinChannel(finalToken, channelName, "", 0)
         } catch (e: Exception) {
-            Toast.makeText(this, "Error initializing voice call: ${e.message}", Toast.LENGTH_LONG).show()
+            Log.e("VoiceCallActivity", "Error initializing voice call: ${e.message}", e)
+            Toast.makeText(this, "Unable to initialize voice call: ${e.message}", Toast.LENGTH_LONG).show()
             finish()
         }
     }
@@ -212,7 +227,10 @@ class VoiceCallActivity : AppCompatActivity() {
         tvCallTimer.text = "Disconnected"
         tvCallTimer.setTextColor(Color.parseColor("#D93025"))
 
-        rtcEngine?.leaveChannel()
+        try {
+            rtcEngine?.leaveChannel()
+        } catch (_: Exception) {}
+
         Handler(Looper.getMainLooper()).postDelayed({
             finish()
         }, 500)
@@ -224,8 +242,10 @@ class VoiceCallActivity : AppCompatActivity() {
         isCallConnected = false
         timeoutHandler.removeCallbacks(timeoutRunnable)
         timerHandler.removeCallbacks(timerRunnable)
-        rtcEngine?.leaveChannel()
-        RtcEngine.destroy()
+        try {
+            rtcEngine?.leaveChannel()
+            RtcEngine.destroy()
+        } catch (_: Exception) {}
         rtcEngine = null
     }
 }

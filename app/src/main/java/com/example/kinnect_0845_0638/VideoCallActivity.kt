@@ -6,6 +6,7 @@ import android.graphics.Color
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import android.util.Log
 import android.view.SurfaceView
 import android.view.View
 import android.widget.FrameLayout
@@ -51,13 +52,15 @@ class VideoCallActivity : AppCompatActivity() {
     private val timerHandler = Handler(Looper.getMainLooper())
     private val timerRunnable = object : Runnable {
         override fun run() {
-            if (isCallConnected && !isEndingCall) {
-                secondsElapsed++
-                val minutes = secondsElapsed / 60
-                val secs = secondsElapsed % 60
-                tvVideoCallTimer.text = String.format("%02d:%02d", minutes, secs)
-                timerHandler.postDelayed(this, 1000)
-            }
+            try {
+                if (isCallConnected && !isEndingCall) {
+                    secondsElapsed++
+                    val minutes = secondsElapsed / 60
+                    val secs = secondsElapsed % 60
+                    tvVideoCallTimer.text = String.format("%02d:%02d", minutes, secs)
+                    timerHandler.postDelayed(this, 1000)
+                }
+            } catch (_: Exception) {}
         }
     }
 
@@ -72,44 +75,52 @@ class VideoCallActivity : AppCompatActivity() {
     private val rtcEventHandler = object : IRtcEngineEventHandler() {
         override fun onUserJoined(uid: Int, elapsed: Int) {
             runOnUiThread {
-                timeoutHandler.removeCallbacks(timeoutRunnable)
-                isCallConnected = true
-                tvCallStatus.text = "Connected"
-                tvCallStatus.setTextColor(Color.parseColor("#27AE60"))
-                tvVideoCallTimer.visibility = View.VISIBLE
-                secondsElapsed = 0
-                timerHandler.removeCallbacks(timerRunnable)
-                timerHandler.post(timerRunnable)
-                setupRemoteVideo(uid)
+                try {
+                    timeoutHandler.removeCallbacks(timeoutRunnable)
+                    isCallConnected = true
+                    tvCallStatus.text = "Connected"
+                    tvCallStatus.setTextColor(Color.parseColor("#27AE60"))
+                    tvVideoCallTimer.visibility = View.VISIBLE
+                    secondsElapsed = 0
+                    timerHandler.removeCallbacks(timerRunnable)
+                    timerHandler.post(timerRunnable)
+                    setupRemoteVideo(uid)
+                } catch (_: Exception) {}
             }
         }
 
         override fun onUserOffline(uid: Int, reason: Int) {
             runOnUiThread {
-                isCallConnected = false
-                timerHandler.removeCallbacks(timerRunnable)
-                tvVideoCallTimer.visibility = View.GONE
-                tvCallStatus.text = "Disconnected"
-                tvCallStatus.setTextColor(Color.parseColor("#D93025"))
-                flRemoteVideo.removeAllViews()
-                Handler(Looper.getMainLooper()).postDelayed({ finish() }, 500)
+                try {
+                    isCallConnected = false
+                    timerHandler.removeCallbacks(timerRunnable)
+                    tvVideoCallTimer.visibility = View.GONE
+                    tvCallStatus.text = "Disconnected"
+                    tvCallStatus.setTextColor(Color.parseColor("#D93025"))
+                    flRemoteVideo.removeAllViews()
+                    Handler(Looper.getMainLooper()).postDelayed({ finish() }, 500)
+                } catch (_: Exception) {}
             }
         }
 
         override fun onJoinChannelSuccess(channel: String?, uid: Int, elapsed: Int) {
             runOnUiThread {
-                if (!isCallConnected) {
-                    tvCallStatus.text = "Calling..."
-                    tvCallStatus.setTextColor(Color.parseColor("#D1E8E6"))
-                }
+                try {
+                    if (!isCallConnected) {
+                        tvCallStatus.text = "Calling..."
+                        tvCallStatus.setTextColor(Color.parseColor("#D1E8E6"))
+                    }
+                } catch (_: Exception) {}
             }
         }
 
         override fun onError(err: Int) {
             runOnUiThread {
-                if (err == 110) {
-                    Toast.makeText(this@VideoCallActivity, "Token Error", Toast.LENGTH_SHORT).show()
-                }
+                try {
+                    if (err == 110) {
+                        Toast.makeText(this@VideoCallActivity, "Token Error", Toast.LENGTH_SHORT).show()
+                    }
+                } catch (_: Exception) {}
             }
         }
     }
@@ -138,14 +149,18 @@ class VideoCallActivity : AppCompatActivity() {
         timeoutHandler.postDelayed(timeoutRunnable, CALL_TIMEOUT_MS)
 
         btnMute.setOnClickListener {
-            isMuted = !isMuted
-            rtcEngine?.muteLocalAudioStream(isMuted)
-            btnMute.isActivated = isMuted
-            Toast.makeText(this, if (isMuted) "Microphone Muted" else "Microphone Unmuted", Toast.LENGTH_SHORT).show()
+            try {
+                isMuted = !isMuted
+                rtcEngine?.muteLocalAudioStream(isMuted)
+                btnMute.isActivated = isMuted
+                Toast.makeText(this, if (isMuted) "Microphone Muted" else "Microphone Unmuted", Toast.LENGTH_SHORT).show()
+            } catch (_: Exception) {}
         }
 
         btnSwitchCamera.setOnClickListener {
-            rtcEngine?.switchCamera()
+            try {
+                rtcEngine?.switchCamera()
+            } catch (_: Exception) {}
         }
 
         btnEndCall.setOnClickListener {
@@ -198,40 +213,46 @@ class VideoCallActivity : AppCompatActivity() {
 
             setupLocalVideo()
 
-            val tokenToUse = intent.getStringExtra("AGORA_TOKEN") ?: AGORA_TOKEN
-            rtcEngine?.joinChannel(tokenToUse, channelName, "", 0)
+            val tokenToUse = intent.getStringExtra("AGORA_TOKEN")
+            val finalToken = if (!tokenToUse.isNullOrEmpty()) tokenToUse else AGORA_TOKEN
+            rtcEngine?.joinChannel(finalToken, channelName, "", 0)
         } catch (e: Exception) {
-            Toast.makeText(this, "Error initializing call: ${e.message}", Toast.LENGTH_LONG).show()
+            Log.e("VideoCallActivity", "Error initializing video call: ${e.message}", e)
+            Toast.makeText(this, "Unable to initialize video call: ${e.message}", Toast.LENGTH_LONG).show()
             finish()
         }
     }
 
     private fun setupLocalVideo() {
-        localSurfaceView = SurfaceView(baseContext)
-        localSurfaceView?.setZOrderMediaOverlay(true)
-        flLocalVideo.addView(localSurfaceView)
+        try {
+            localSurfaceView = SurfaceView(baseContext)
+            localSurfaceView?.setZOrderMediaOverlay(true)
+            flLocalVideo.addView(localSurfaceView)
 
-        rtcEngine?.setupLocalVideo(
-            VideoCanvas(localSurfaceView, VideoCanvas.RENDER_MODE_HIDDEN, 0)
-        )
-        rtcEngine?.startPreview()
+            rtcEngine?.setupLocalVideo(
+                VideoCanvas(localSurfaceView, VideoCanvas.RENDER_MODE_HIDDEN, 0)
+            )
+            rtcEngine?.startPreview()
+        } catch (_: Exception) {}
     }
 
     private fun setupRemoteVideo(uid: Int) {
-        if (flRemoteVideo.childCount >= 1) {
-            flRemoteVideo.removeAllViews()
-        }
-        remoteSurfaceView = SurfaceView(baseContext).apply {
-            layoutParams = FrameLayout.LayoutParams(
-                FrameLayout.LayoutParams.MATCH_PARENT,
-                FrameLayout.LayoutParams.MATCH_PARENT
-            )
-        }
-        flRemoteVideo.addView(remoteSurfaceView)
+        try {
+            if (flRemoteVideo.childCount >= 1) {
+                flRemoteVideo.removeAllViews()
+            }
+            remoteSurfaceView = SurfaceView(baseContext).apply {
+                layoutParams = FrameLayout.LayoutParams(
+                    FrameLayout.LayoutParams.MATCH_PARENT,
+                    FrameLayout.LayoutParams.MATCH_PARENT
+                )
+            }
+            flRemoteVideo.addView(remoteSurfaceView)
 
-        rtcEngine?.setupRemoteVideo(
-            VideoCanvas(remoteSurfaceView, VideoCanvas.RENDER_MODE_HIDDEN, uid)
-        )
+            rtcEngine?.setupRemoteVideo(
+                VideoCanvas(remoteSurfaceView, VideoCanvas.RENDER_MODE_HIDDEN, uid)
+            )
+        } catch (_: Exception) {}
     }
 
     private fun leaveCall() {
@@ -246,8 +267,11 @@ class VideoCallActivity : AppCompatActivity() {
         tvCallStatus.text = "Disconnected"
         tvCallStatus.setTextColor(Color.parseColor("#D93025"))
 
-        rtcEngine?.stopPreview()
-        rtcEngine?.leaveChannel()
+        try {
+            rtcEngine?.stopPreview()
+            rtcEngine?.leaveChannel()
+        } catch (_: Exception) {}
+
         Handler(Looper.getMainLooper()).postDelayed({
             finish()
         }, 500)
@@ -259,9 +283,11 @@ class VideoCallActivity : AppCompatActivity() {
         isCallConnected = false
         timeoutHandler.removeCallbacks(timeoutRunnable)
         timerHandler.removeCallbacks(timerRunnable)
-        rtcEngine?.stopPreview()
-        rtcEngine?.leaveChannel()
-        RtcEngine.destroy()
+        try {
+            rtcEngine?.stopPreview()
+            rtcEngine?.leaveChannel()
+            RtcEngine.destroy()
+        } catch (_: Exception) {}
         rtcEngine = null
     }
 }
