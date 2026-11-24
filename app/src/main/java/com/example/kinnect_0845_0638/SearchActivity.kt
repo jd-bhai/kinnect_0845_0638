@@ -88,7 +88,7 @@ class SearchActivity : AppCompatActivity() {
             val isFriend = dbHelper.isFriend(currentUid, user.uid)
             val isSent = dbHelper.hasSentFriendRequest(currentUid, user.uid)
 
-            addUserSearchResultRow(user.uid, fullName, user.username, initials, isFriend, isSent)
+            addUserSearchResultRow(user.uid, fullName, user.username, initials, isFriend, isSent, currentUid)
         }
     }
 
@@ -98,7 +98,8 @@ class SearchActivity : AppCompatActivity() {
         username: String,
         initials: String,
         isFriend: Boolean,
-        isSent: Boolean
+        isSent: Boolean,
+        currentUid: String
     ) {
         val rowLayout = LinearLayout(this).apply {
             layoutParams = LinearLayout.LayoutParams(
@@ -163,7 +164,15 @@ class SearchActivity : AppCompatActivity() {
             setTypeface(null, Typeface.BOLD)
             gravity = Gravity.CENTER
 
-            if (isFriend) {
+            if (targetUid == currentUid) {
+                text = "Profile"
+                setTextColor(Color.WHITE)
+                setBackgroundResource(R.drawable.bg_button_teal)
+                setOnClickListener {
+                    val intent = Intent(this@SearchActivity, ProfileActivity::class.java)
+                    startActivity(intent)
+                }
+            } else if (isFriend) {
                 text = "Message"
                 setTextColor(Color.BLACK)
                 setBackgroundResource(R.drawable.bg_button_outline)

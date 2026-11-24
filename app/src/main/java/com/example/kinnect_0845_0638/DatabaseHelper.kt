@@ -353,9 +353,9 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
 
     fun searchUsers(query: String, currentUid: String): List<UserData> {
         val db = readableDatabase
-        val sql = "SELECT * FROM users WHERE uid != ? AND (firstName LIKE ? OR lastName LIKE ? OR username LIKE ?)"
+        val sql = "SELECT * FROM users WHERE (firstName LIKE ? OR lastName LIKE ? OR username LIKE ? OR email LIKE ?)"
         val pattern = "%$query%"
-        val cursor = db.rawQuery(sql, arrayOf(currentUid, pattern, pattern, pattern))
+        val cursor = db.rawQuery(sql, arrayOf(pattern, pattern, pattern, pattern))
         val users = mutableListOf<UserData>()
         while (cursor.moveToNext()) {
             users.add(cursorToUser(cursor))
