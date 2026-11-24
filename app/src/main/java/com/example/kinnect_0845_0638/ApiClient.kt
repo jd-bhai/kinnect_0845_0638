@@ -20,6 +20,10 @@ object ApiClient {
             conn.readTimeout = 5000
             conn.doOutput = true
 
+            // Bypass Localtunnel reminder warning page
+            conn.setRequestProperty("Bypass-Tunnel-Remainder", "true")
+            conn.setRequestProperty("User-Agent", "Mozilla/5.0")
+
             val postData = StringBuilder()
             for ((key, value) in params) {
                 if (postData.isNotEmpty()) postData.append('&')
@@ -70,6 +74,10 @@ object ApiClient {
             conn.requestMethod = "GET"
             conn.connectTimeout = 5000
             conn.readTimeout = 5000
+
+            // Bypass Localtunnel reminder warning page
+            conn.setRequestProperty("Bypass-Tunnel-Remainder", "true")
+            conn.setRequestProperty("User-Agent", "Mozilla/5.0")
 
             if (conn.responseCode == HttpURLConnection.HTTP_OK) {
                 val reader = BufferedReader(InputStreamReader(conn.inputStream))
